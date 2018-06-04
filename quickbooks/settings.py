@@ -16,6 +16,70 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+# Local deployment settings
+BASE_URL = "https://a125bc4b.ngrok.io"
+
+
+### YellowAnt OAuth specific settings ###
+
+# URL to obtain oauth2 access for a YA user
+YELLOWANT_OAUTH_URL = "https://www.yellowant.com/api/oauth2/authorize/"
+
+# URL to receive oauth2 codes from YA for user authentication.
+# As a developer, you need to provide this URL in the YA
+# developer console so that YA knows exactly where to send the oauth2 codes.
+YELLOWANT_REDIRECT_URL = BASE_URL + "/yellowantredirecturl/"
+
+# Numerical ID generated when you register your application through
+#  the YA developer console
+YA_APP_ID = "1845"
+
+# Client ID generated from the YA developer console.
+# Required to identify requests from this application to YA
+YELLOWANT_CLIENT_ID = "tls6rTvzpfzSliwHgQYBU84gAaXOA89CCzG7GYyl"
+
+# Client secret generated from the YA developer console.
+# Required to identify requests from this application to YA
+YELLOWANT_CLIENT_SECRET = "pQHTbECqNLM4GjLaKeg9XnjVhcx7TgJqg3TGvDGmtkS42vhDvk3mDjQQwAINYJRYdo5pfq5pL5tFoJ4t3KDufi90uY5nHMOgwWCyW9Ncc8Nzn1zeVL8Nlt1jBWHEJeTP"
+
+# Verification token generated from the YA developer console.
+# This application can verify requests from YA as they will
+# carry the verification token
+YELLOWANT_VERIFICATION_TOKEN = "odDHZLOQ9MzkQohL0q8PBcqk9NH5Myv3nDH5GspBKfuAbUXSLL6f1zDr3Itn4bWWB1yT5AxGtPNS92ChfJeStRUumpcvrSjlkqxl2T6ah481p68mSmoc6TVB1UXgkAK9"
+
+### END YellowAnt specific settings ###
+
+
+
+### Quickbooks OAuth specific settings ###
+
+DISCOVERY_DOCUMENT = 'https://developer.api.intuit.com/.well-known/openid_sandbox_configuration/'
+QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
+QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
+QUICKBOOKS_REDIRECT_URL  = BASE_URL + "/quickbookauthurl/"
+
+#"https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl"
+
+PRODUCTION_BASE_URL = "https://quickbooks.api.intuit.com"
+ACCOUNTING_SCOPE = 'com.intuit.quickbooks.accounting'
+OPENID_SCOPES = ['openid', 'profile', 'email', 'phone', 'address']
+GET_APP_SCOPES = ['com.intuit.quickbooks.accounting', 'openid', 'profile', 'email', 'phone', 'address']
+SANDBOX_QBO_BASEURL = 'https://sandbox-quickbooks.api.intuit.com'
+SANDBOX_PROFILE_URL = 'https://sandbox-accounts.platform.intuit.com/v1/openid_connect/userinfo'
+ID_TOKEN_ISSUER = 'https://oauth.platform.intuit.com/op/v1'
+
+### END of Quickbooks OAuth specific settings ###
+
+
+
+
+
+
+
+
+
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -25,18 +89,21 @@ SECRET_KEY = 'r7jt%$c=ukm@#b)%hb=o^n-bc8t7o(-)9=hi2)#^kn838s+3ov'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'quickauth',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'records',
+
 ]
 
 MIDDLEWARE = [
@@ -75,8 +142,12 @@ WSGI_APPLICATION = 'quickbooks.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'quickbookdb',
+        'USER': 'root',
+        'PASSWORD': 'vimal_1996',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
@@ -118,3 +189,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
