@@ -46,7 +46,10 @@ class CommandCentre(object):
             'create_invoice' : self.create_invoice,
             'read_invoice': self.read_invoice,
             'list_all_invoice_ids': self.list_all_invoice_ids,
-            'update_invoice' : self.update_invoice
+            'update_invoice' : self.update_invoice,
+            'get_all_customers':    self.get_all_customers,
+            'get_customer_details' : self.get_customer_details,
+            'create_customer' : self.create_customer
         }
 
         self.user_integration = YellowUserToken.objects.get\
@@ -69,9 +72,7 @@ class CommandCentre(object):
 
 
     def get_company_info(self,args):
-
         #### Add yellowant message formatting
-
         print("In get_company_info")
         route = '/v3/company/{0}/companyinfo/{0}'.format(self.realmID)
 
@@ -203,4 +204,71 @@ class CommandCentre(object):
         print(response,r.status_code)
         return r.status_code
 
+    def get_all_customers(self,args):
+        ### Add YA message format
+        print("In get_all_customers")
+        route = "/v3/company/" + self.realmID + "/query?query=select * from Customer"
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+        response = json.loads(json.dumps(xmltodict.parse(r.text)))
+        print(response)
+        return r.status_code
+
+    def get_customer_details(self,args):
+        ### Add YA message format
+        print("In get_customer_details")
+        customerId = args['customer_id']
+        route = "/v3/company/" + self.realmID + "/customer/" + customerId
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+        response = json.loads(json.dumps(xmltodict.parse(r.text)))
+        print(response)
+        return r.status_code
+
+    def create_customer(self,args):
+        ### Add YA message format
+        print("In create_customer")
+        route = "/v3/company/" + self.realmID + "/customer"
+
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'accept': 'application/json'}
+
+        notes = args['notes']
+        display_name = args['display_name']
+        email = args['e-mail']
+
+        payload = {
+            "BillAddr": {
+                "Line1": "",
+                "City": "",
+                "Country": "",
+                "CountrySubDivisionCode": "",
+                "PostalCode": ""
+            },
+            "Notes": notes,
+            "Title": "",
+            "GivenName": "",
+            "MiddleName": "",
+            "FamilyName": "",
+            "Suffix": "",
+            "FullyQualifiedName": "",
+            "CompanyName": "",
+            "DisplayName": display_name,
+            "PrimaryPhone": {
+                "FreeFormNumber": ""
+            },
+            "PrimaryEmailAddr": {
+                "Address": email
+            }
+        }
+
+        r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers, json=payload)
+        response = json.loads(r.text)
+        print(response)
+        return r.status_code
 
