@@ -170,14 +170,14 @@ class CommandCentre(object):
 
     def update_invoice(self,args):
 
-        ## Bug here, fix it
+        ## Bug fixed
         ### Add YA message format
         print("In update_invoice")
 
         id = args['invoice_id']
         due_date = args['due_date']
-
-        '''#Fetching the invoice
+        syn_token = args['syn_token']
+        #Fetching the invoice
         route = "/v3/company/" + self.realmID + "/invoice/" + id
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
         auth_header = 'Bearer ' + bearer.accessToken
@@ -185,95 +185,22 @@ class CommandCentre(object):
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
         data = {}
         response = json.loads(r.text)
-        print(response)
-        data = response
+        #print(response)
+        data = response['Invoice']
+        print("Invoice part")
+        print(data)
 
         #Updating the invoice
-        data['Invoice']['DueDate'] = due_date'''
-
-        #payload
-        data = {
-            "Deposit": 0,
-            "domain": "QBO",
-            "sparse": "false",
-            "Id": "239",
-            "SyncToken": "0",
-            "MetaData": {
-                "CreateTime": "2015-07-24T10:35:08-07:00",
-                "LastUpdatedTime": "2015-07-24T10:35:08-07:00"
-            },
-            "CustomField": [{
-                "DefinitionId": "1",
-                "Name": "Crew #",
-                "Type": "StringType"
-            }],
-            "DocNumber": "1070",
-            "TxnDate": "2015-07-24",
-            "LinkedTxn": [],
-            "Line": [{
-                "Id": "1",
-                "LineNum": 1,
-                "Amount": 150.0,
-                "DetailType": "SalesItemLineDetail",
-                "SalesItemLineDetail": {
-                    "ItemRef": {
-                        "value": "1",
-                        "name": "Services"
-                    },
-                    "TaxCodeRef": {
-                        "value": "NON"
-                    }
-                }
-            }, {
-                "Amount": 150.0,
-                "DetailType": "SubTotalLineDetail",
-                "SubTotalLineDetail": {}
-            }],
-            "TxnTaxDetail": {
-                "TotalTax": 0
-            },
-            "CustomerRef": {
-                "value": "1",
-                "name": "Amy's Bird Sanctuary"
-            },
-            "CustomerMemo": {
-                "value": "Added customer memo."
-            },
-            "BillAddr": {
-                "Id": "2",
-                "Line1": "4581 Finch St.",
-                "City": "Bayshore",
-                "CountrySubDivisionCode": "CA",
-                "PostalCode": "94326",
-                "Lat": "INVALID",
-                "Long": "INVALID"
-            },
-            "ShipAddr": {
-                "Id": "109",
-                "Line1": "4581 Finch St.",
-                "City": "Bayshore",
-                "CountrySubDivisionCode": "CA",
-                "PostalCode": "94326",
-                "Lat": "INVALID",
-                "Long": "INVALID"
-            },
-            "DueDate": "2015-08-23",
-            "TotalAmt": 150.0,
-            "ApplyTaxAfterDiscount": "false",
-            "PrintStatus": "NeedToPrint",
-            "EmailStatus": "NotSet",
-            "Balance": 150.0
-        }
-
-
-        #Making the update permanent by making post request
-
+        payload = data
+        payload["DueDate"] = due_date
+        payload["SyncToken"] = syn_token
         route = "/v3/company/" + self.realmID + "/invoice"
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
         auth_header = 'Bearer ' + bearer.accessToken
-        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
-        r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers,json=data)
-        response =  json.loads(r.text)
-        print(response)
-
+        headers = {'Authorization': auth_header, 'accept': 'application/json'}
+        r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers,json=payload)
+        response = json.loads(r.text)
+        print(response,r.status_code)
         return r.status_code
+
+
