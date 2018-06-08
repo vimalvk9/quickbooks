@@ -157,7 +157,8 @@ def incorrect_padding(s):
 
 def stringToBase64(s):
     print("s9")
-    return (base64.b64encode(bytes(s)).encode('utf-8')).decode()
+    return base64.b64encode(bytes(s, 'utf-8')).decode()
+
 
 
 # Returns a securely generated random string. Source from the django.utils.crypto module.

@@ -22,7 +22,7 @@ from quickauth.services import (
     revokeToken,
 )
 
-
+'''
 def index(request):
     print("In index")
 
@@ -42,7 +42,7 @@ def index(request):
         return HttpResponse("Please login !")
 
     #print("1")
-    #return render(request, 'home.html')
+    #return render(request, 'home.html')'''
 
 
 

@@ -18,6 +18,8 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from yellowant import YellowAnt
+from yellowant.messageformat import MessageClass, MessageAttachmentsClass, MessageButtonsClass
+
 from quickauth import getDiscoveryDocument
 from records.commandcentre import CommandCentre
 from records.models import YellowUserToken,YellowAntRedirectState, AppRedirectState, QuickbookUserToken, \
@@ -97,17 +99,38 @@ def yellowantRedirecturl(request):
                                             ['user_application'],
                                         webhook_id=hash_str)
 
-    state = get_CSRF_token(request)      #str(uuid.uuid4())
+    # state = get_CSRF_token(request)
+    # AppRedirectState.objects.create(user_integration=ut, state=state)
+    #
+    # qut = QuickbookUserToken.objects.create(user_integration=ut, accessToken=" ",
+    #                                         refreshExpiry=0, tokenType=" ",
+    #                                         refreshToken=" ",
+    #                                         accessTokenExpiry=0,
+    #                                         )
+    # return HttpResponseRedirect("/")
+
+
+    state = str(uuid.uuid4())#get_CSRF_token(request)
     AppRedirectState.objects.create(user_integration=ut, state=state)
 
     url = getDiscoveryDocument.auth_endpoint
     params = {'scope': settings.ACCOUNTING_SCOPE, 'redirect_uri': settings.QUICKBOOKS_REDIRECT_URL,
-              'response_type': 'code', 'state': get_CSRF_token(request), 'client_id': settings.QUICKBOOKS_CLIENT_ID}
-    url += '?' + urllib.urlencode(params)
+              'response_type': 'code', 'state': state, 'client_id': settings.QUICKBOOKS_CLIENT_ID}
+    url += '?' + urllib.parse.urlencode(params)
     return HttpResponseRedirect(url)
+#
+# def quickauth(request):
+#
+#     url = getDiscoveryDocument.auth_endpoint
+#     params = {'scope': settings.ACCOUNTING_SCOPE, 'redirect_uri': settings.QUICKBOOKS_REDIRECT_URL,
+#               'response_type': 'code', 'state': get_CSRF_token(request), 'client_id': settings.QUICKBOOKS_CLIENT_ID}
+#     url += '?' + urllib.parse.urlencode(params)
+#     return HttpResponseRedirect(url)
 
-def qucikbookRedirecturl(request):
+def quickbookRedirecturl(request):
+
     ''' OAuth2 at Quickbook server '''
+
     code = request.GET.get("code", False)
     print(code)
     print("In qucikbookRedirecturl")
@@ -119,13 +142,13 @@ def qucikbookRedirecturl(request):
     error = request.GET.get('error', None)
     print(error)
 
-    # Checking status of auth request
-    if error == 'access_denied':
-        return HttpResponse('Access denied')
-    if state is None:
-        return HttpResponseBadRequest()
-    elif state != get_CSRF_token(request):  # validate against CSRF attacks
-        return HttpResponse('unauthorized', status=401)
+    # # Checking status of auth request
+    # if error == 'access_denied':
+    #     return HttpResponse('Access denied')
+    # if state is None:
+    #     return HttpResponseBadRequest()
+    # elif state != get_CSRF_token(request):  # validate against CSRF attacks
+    #     return HttpResponse('unauthorized', status=401)
 
     # Getting auth code
     auth_code = request.GET.get('code', None)
@@ -143,13 +166,189 @@ def qucikbookRedirecturl(request):
     updateSession(request, bearer.accessToken, bearer.refreshToken, realmId)
 
 
+    # qut = QuickbookUserToken.objects.get(user_integration=ut)
     qut = QuickbookUserToken.objects.create(user_integration=ut, accessToken=bearer.accessToken,
                                             refreshExpiry=bearer.refreshExpiry,tokenType=bearer.tokenType,
                                             refreshToken=bearer.refreshToken,accessTokenExpiry=bearer.accessTokenExpiry,
-                                            )
+                                            login_update_flag=True)
+    # qut.accessToken=bearer.accessToken
+    # qut.refreshExpiry = bearer.refreshExpiry
+    # qut.tokenType = bearer.tokenType
+    # qut.refreshToken = bearer.refreshToken
+    # qut.accessTokenExpiry=bearer.accessTokenExpiry
+    # qut.save()
 
     qd = QuickUserDetails.objects.create(user_integration=qut,realmId=realmId)
-    return HttpResponse("Authenticated !")
+    return HttpResponseRedirect("/")
+
+    # return HttpResponse(json.dumps({
+    #         "ok": True,
+    #         "is_valid": True
+    #     }))
+
+
+
+@csrf_exempt
+def update_invoice(request):
+
+    """
+    Webhook function to notify user about newly created invoice
+    """
+
+    # Extracting necessary data
+    data = json.loads(request.POST['data'])
+    args = data["args"]
+    invoice_id = args['invoice_id']
+    service_application = data["application"]
+
+    # Feching integration_id form database
+    integration_id = (YellowUserToken.objects.get \
+                          (yellowant_integration_id=service_application)).yellowant_integration_id
+
+    # Fetching access_token from database
+    access_token = (YellowUserToken.objects.get \
+                        (yellowant_integration_id=service_application)).yellowant_token
+
+    service_application = str(integration_id)
+
+    # Creating message object for webhook message
+    webhook_message = MessageClass()
+    webhook_message.message_text = "Invoice " + str(invoice_id) + " updated."
+    attachment = MessageAttachmentsClass()
+    attachment.title = "Get all invoice details"
+
+    button_get_incidents = MessageButtonsClass()
+    button_get_incidents.name = "1"
+    button_get_incidents.value = "1"
+    button_get_incidents.text = "Get all invoice details"
+    button_get_incidents.command = {
+        "service_application": service_application,
+        "function_name": 'list_all_invoice_ids',
+        "data": {}
+    }
+
+    attachment.attach_button(button_get_incidents)
+    webhook_message.attach(attachment)
+    #print(integration_id)
+
+    # Creating yellowant object
+    yellowant_user_integration_object = YellowAnt(access_token=access_token)
+
+    # Sending webhook message to user
+    send_message = yellowant_user_integration_object.create_webhook_message(
+        requester_application=integration_id,
+        webhook_name="invoice_update", **webhook_message.get_dict())
+
+    return HttpResponse("OK", status=200)
+
+
+
+@csrf_exempt
+def add_new_invoice(request):
+
+    """
+    Webhook function to notify user about newly created invoice
+    """
+
+    # Extracting necessary data
+    data = json.loads(request.POST['data'])
+    args = data["args"]
+    service_application = data["application"]
+
+    # Feching integration_id form database
+    integration_id = (YellowUserToken.objects.get \
+                          (yellowant_integration_id=service_application)).yellowant_integration_id
+
+    # Fetching access_token from database
+    access_token = (YellowUserToken.objects.get \
+                        (yellowant_integration_id=service_application)).yellowant_token
+
+    service_application = str(integration_id)
+
+    # Creating message object for webhook message
+    webhook_message = MessageClass()
+    webhook_message.message_text = "New invoice added"
+    attachment = MessageAttachmentsClass()
+    attachment.title = "Get all invoice details"
+
+    button_get_incidents = MessageButtonsClass()
+    button_get_incidents.name = "1"
+    button_get_incidents.value = "1"
+    button_get_incidents.text = "Get all invoice details"
+    button_get_incidents.command = {
+        "service_application": service_application,
+        "function_name": 'list_all_invoice_ids',
+        "data": {}
+    }
+
+    attachment.attach_button(button_get_incidents)
+    webhook_message.attach(attachment)
+    #print(integration_id)
+
+    # Creating yellowant object
+    yellowant_user_integration_object = YellowAnt(access_token=access_token)
+
+    # Sending webhook message to user
+    send_message = yellowant_user_integration_object.create_webhook_message(
+        requester_application=integration_id,
+        webhook_name="new_invoice", **webhook_message.get_dict())
+
+    return HttpResponse("OK", status=200)
+
+
+@csrf_exempt
+def add_new_customer(request):
+
+    """
+    Webhook function to notify user about newly created invoice
+    """
+
+    # Extracting necessary data
+    data = json.loads(request.POST['data'])
+    args = data["args"]
+    service_application = data["application"]
+
+    # Feching integration_id form database
+    integration_id = (YellowUserToken.objects.get \
+                          (yellowant_integration_id=service_application)).yellowant_integration_id
+
+    # Fetching access_token from database
+    access_token = (YellowUserToken.objects.get \
+                        (yellowant_integration_id=service_application)).yellowant_token
+
+    service_application = str(integration_id)
+
+    # Creating message object for webhook message
+    webhook_message = MessageClass()
+    webhook_message.message_text = "New customer added"
+    attachment = MessageAttachmentsClass()
+    attachment.title = "Get all customer details"
+
+    button_get_incidents = MessageButtonsClass()
+    button_get_incidents.name = "1"
+    button_get_incidents.value = "1"
+    button_get_incidents.text = "Get all customer details"
+    button_get_incidents.command = {
+        "service_application": service_application,
+        "function_name": 'get_all_customers',
+        "data": {}
+    }
+
+    attachment.attach_button(button_get_incidents)
+    webhook_message.attach(attachment)
+    #print(integration_id)
+
+    # Creating yellowant object
+    yellowant_user_integration_object = YellowAnt(access_token=access_token)
+
+    # Sending webhook message to user
+    send_message = yellowant_user_integration_object.create_webhook_message(
+        requester_application=integration_id,
+        webhook_name="new_customer", **webhook_message.get_dict())
+
+    return HttpResponse("OK", status=200)
+
+
 
 
 @csrf_exempt
@@ -172,6 +371,12 @@ def yellowantapi(request):
 
         # Processing command in some class Command and sending a Message Object
             message = CommandCentre(data["user"], service_application, function_name, args).parse()
+            if function_name == 'create_invoice':
+                add_new_invoice(request)
+            if function_name == 'create_customer':
+                add_new_customer(request)
+            if function_name == 'update_invoice':
+                update_invoice(request)
 
         # Appropriate function calls for corresponding webhook functions
             # Figure out

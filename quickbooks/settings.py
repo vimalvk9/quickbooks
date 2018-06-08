@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Local deployment settings
-BASE_URL = "https://98b84cdb.ngrok.io"
+BASE_URL = "https://3df7f5f4.ngrok.io"
 
 
 ### YellowAnt OAuth specific settings ###
@@ -95,7 +95,8 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'quickauth',
+
+    'web',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -103,7 +104,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'records',
-
 ]
 
 MIDDLEWARE = [

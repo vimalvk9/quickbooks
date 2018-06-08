@@ -5,8 +5,8 @@ from . import views
 
 urlpatterns = [
 
-    url('',views.index,name='home'),
-    url(r'^$', views.index, name='home'),
+    #url('',views.index,name='home'),
+    #url(r'^$', views.index, name='home'),
     url(r'^(?i)connectToQuickbooks/?$', views.connectToQuickbooks, name='connectToQuickbooks'),
     url(r'^(?i)signInWithIntuit/?$', views.signInWithIntuit, name='signInWithIntuit'),
     url(r'^(?i)getAppNow/?$', views.getAppNow, name='getAppNow'),

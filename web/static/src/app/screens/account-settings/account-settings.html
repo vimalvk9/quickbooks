@@ -1,0 +1,170 @@
+<!--
+<div class="layout-container">
+  <section class="mb4" layout="column" layout-align="start center">
+    <h1 class="f1 tc">Settings</h1>
+  </section>
+
+  <section layout="column" layout-align="start center">
+    <div class="mw7 w-100" ng-if="$ctrl.userAccount">
+      <div ng-if="$ctrl.userAccount.app_authenticated" md-whiteframe="2" class="br2 pa3 mb4">
+        <h3 class="f3 mb2">{{ ::$ctrl.userAccount.handle }}</h3>
+        <div><b>YellowAnt Invoke Name:</b> {{ ::$ctrl.userAccount.user_invoke_name }}</div>
+       &lt;!&ndash; <div><b>Repository Webhooks for YellowAnt:</b> {{ ::$ctrl.userAccount.webhooks_count }}</div>&ndash;&gt;
+        <div layout="row" layout-align="end start" class="layout-align-end-start layout-row">
+          <md-button class="md-accent md-raised" ng-click="$ctrl.onDeleteAccount()">Remove Integration</md-button>
+        </div>
+      </div>
+
+      <div ng-if="$ctrl.userAccount.app_authenticated" md-whiteframe="2" class="br2 pa3 mb4">
+        <div class="mb4">
+          <h3 class="f3 mb2">Your Webhooks</h3>
+          <div>
+            These are webhooks which have been created specifically for the YellowAnt bot.
+            You can create new Statuspage repository webhooks for your YellowAnt integration by sending the chat command:-
+          </div>
+          <div class="pa1"><code class="ba pl2 pr2">{{ ::$ctrl.userAccount.user_invoke_name }} createwebhook repo "repo-name"</code></div>
+        </div>
+        <div
+            ng-repeat="webhook in $ctrl.userAccount.webhooks
+                       track by webhook.id"
+            class="mb3">
+          <h4 class="f4 b mb2">{{webhook.repo_full_name}}</h4>
+          <p class="mt0 mb1"><b>Webhook ID:</b> {{webhook.id}}</p>
+          <p class="mt0"><b>Repo ID:</b> {{webhook.repo}}</p>
+          <div ng-if="webhook.is_deleted" class="mb3 ba1 br2 pa2" md-colors="::{ color: 'accent'}">
+            This webhook has been removed from YellowAnt, and you will not receive any notifications for it.<br>
+            Please delete it manually from Statuspage since we do not have delete permissions for your Statuspage account.
+          </div>
+          <div layout="flex"
+               ng-if="!webhook.is_deleted"
+               layout-align="space-between center"
+               class="mb3">
+            <a md-button
+               ng-href="{{webhook.url}}"
+               target="_blank"
+               class="md-primary md-raised ma0">
+              Configure Webhook
+            </a>
+            <md-button ng-click="$ctrl.onDeleteWebhook(webhook)" class="md-icon-button">
+              <md-icon>delete</md-icon>
+            </md-button>
+          </div>
+          <div class="hr-divider"></div>
+        </div>
+      </div>
+
+      <div ng-if="!$ctrl.userAccount.app_authenticated" md-whiteframe="2" class="br2 pa3 mb4">
+        <h3 class="f3 mb2" md-colors="::{ color: 'accent'}">Statuspage Account Not Integrated</h3>
+        <div><b>YellowAnt Invoke Name:</b> {{ ::$ctrl.userAccount.user_invoke_name }}</div>
+        <div layout="row" layout-align="end start" class="layout-align-end-start layout-row">
+          <md-button class="md-accent md-raised" ng-click="$ctrl.integrateAccount()">Integrate</md-button>
+        </div>
+      </div>
+
+    </div>
+    
+    <div class="mw7 w-100" ng-if="!$ctrl.userAccount">
+      Could not get Yellowant integration details.
+    </div>
+  </section>
+
+</div>
+-->
+<!--<div ng-if="$ctrl.status" id="status">
+    <b layout="row" layout-align="center center" class="md-padding">
+      <h1>{{$ctrl.status}}</h1>
+    </b>
+</div>-->
+<!--<div class="layout-container">
+    <div class= 'form-group pa4 mb4' md-whiteframe="1">
+        <h3>Notifications</h3>
+        <md-switch ng-change="$ctrl.submitSettings()" ng-model="$ctrl.accountDetails.notification" aria-label="Switch 1">
+             Send notifications when there are new tickets
+        </md-switch>
+    </div>
+</div>-->
+<div class="layout-container">
+<form name='$ctrl.form' ng-submit='$ctrl.submitForm()' novalidate>
+    <div class= 'form-group pa4 mb4' md-whiteframe="1">
+        <h3>Access</h3>
+        <div layout="row" layout-wrap>
+            <label class="input-container" layout="column" flex="noshrink">
+                <span>Quickbooks Client Id :</span>
+                <md-input-container md-no-float>
+                    <input  type="text"
+                        autocomplete="off"
+                        class="text-input"
+                        ng-model="$ctrl.accountDetails.client_id"
+                        name="client_id"
+                        minlength="2"
+                        maxlength="100"
+                        md-maxlength="100"
+                        required
+                        aria-label="Application Name"
+                        placeholder="Quickbooks Client Id">
+                    <span class="hint">Your Client Id that you will find in your Quickbooks settings</span>
+                   <!-- <div ng-messages="$ctrl.form.api_key.$error">
+                        <div ng-message="required">This is required!</div>
+                        <div ng-message="md-maxlength">That's too long!</div>
+                        <div ng-message="minlength">That's too short!</div>
+                    </div>-->
+                </md-input-container>
+            </label>
+            <label class="input-container" layout="column" flex="noshrink">
+                <span>Quickbooks Client Secret :</span>
+                <md-input-container md-no-float>
+                    <input  type="text"
+                        autocomplete="off"
+                        class="text-input"
+                        ng-model="$ctrl.accountDetails.client_secret"
+                        name="client_secret"
+                        minlength="2"
+                        maxlength="100"
+                        md-maxlength="100"
+                        required
+                        aria-label="Application Name"
+                        placeholder="Quickbooks Client Secret">
+                    <span class="hint">Your Client Secret that you will find in your Quickbooks settings </span>
+                    <!--<div ng-messages="$ctrl.form.team_url.$error">
+                        <div ng-message="required">This is required!</div>
+                        <div ng-message="md-maxlength">That's too long!</div>
+                        <div ng-message="minlength">That's too short!</div>
+                    </div>-->
+                </md-input-container>
+            </label>
+        </div>
+        <div layout="row" layout-align="end center">
+            <md-button  class="md-raised md-primary" ng-disabled="$ctrl.isDisabled"  type="submit">
+                Submit
+            </md-button>
+        </div>
+    </div>
+
+</form>
+<!--<div class="layout-container">
+    <div class= 'form-group pa4 mb4' md-whiteframe="1">
+        <h3>Notification Setting Instruction</h3>
+        <p>{{$ctrl.accountDetails.callback}}</p>
+        <p> Use this url in "callback url" field in settings > Dispatch'r > New Rule. Please select "ticket_id" parameter
+            for "Yellowant Workflows" to work correctly.
+        </p>
+        <div layout="row" layout-align="end center"  >
+            <md-button class="md-raised md-primary" ng-click="$ctrl.newUrl()">
+                New Url
+            </md-button>
+        </div>
+    </div>
+</div>-->
+<!--<div layout="row" class="layout-container" layout-align="end center">-->
+    <!--<md-button class="md-raised md-warn" >Delete This Account</md-button>-->
+<!--</div>-->
+<div class="dialog-demo-content layout-container" layout="row" layout-wrap layout-margin layout-align=" space-between center">
+    <md-button class="md-raised md-primary" ng-click="$ctrl.goBack()">
+        Back
+    </md-button>
+    <md-button class="md-accent md-raised" ng-click="$ctrl.onDeleteAccount()"> Delete This Account</md-button>
+    <!--<md-button class="md-raised md-warn" ng-click="$ctrl.onDeleteAccount()">
+      Delete This Account
+    </md-button>-->
+</div>
+</div>

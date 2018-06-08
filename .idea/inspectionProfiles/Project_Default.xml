@@ -5,6 +5,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="urllib.urlencode" />
+          <option value="django.urls.path" />
         </list>
       </option>
     </inspection_tool>

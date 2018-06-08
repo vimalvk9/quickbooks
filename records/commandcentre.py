@@ -75,7 +75,6 @@ class CommandCentre(object):
         #### Add yellowant message formatting
         print("In get_company_info")
         route = '/v3/company/{0}/companyinfo/{0}'.format(self.realmID)
-
         # Refresh access token
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
         # bearer = Bearer.accessToken
@@ -84,16 +83,39 @@ class CommandCentre(object):
         headers = {'Authorization': auth_header, 'accept': 'application/json'}
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
         status_code = r.status_code
-        print(status_code)
         if status_code != 200:
             response = ''
             return response, status_code
 
         response = json.loads(r.text)
-        print(response['CompanyInfo']['SyncToken'])
         print(response)
-        print(status_code)
-        return response, status_code
+        print(type(response))
+
+
+
+        # Creating message objects to structure the message to be shown
+        message = MessageClass()
+        message.message_text = "Company Details:"
+
+        attachment = MessageAttachmentsClass()
+        field1 = AttachmentFieldsClass()
+        field1.title = "Name :"
+        field1.value = response["CompanyInfo"]['LegalName']
+        attachment.attach_field(field1)
+
+        field2 = AttachmentFieldsClass()
+        field2.title = "Created at"
+        field2.value = response["CompanyInfo"]['CompanyStartDate']
+        attachment.attach_field(field2)
+
+        field3 = AttachmentFieldsClass()
+        field3.title = "Email Id"
+        field3.value = response["CompanyInfo"]['Email']['Address']
+        attachment.attach_field(field3)
+
+        message.attach(attachment)
+        return message.to_json()
+
 
     def create_invoice(self,args):
 
@@ -140,7 +162,22 @@ class CommandCentre(object):
         r = requests.post(settings.PRODUCTION_BASE_URL + route,headers=headers,json=payload)
         response = json.loads(r.text)
         print(response)
-        return r.status_code
+        message = MessageClass()
+        message.message_text = "New Invoice Created :"
+
+        attachment = MessageAttachmentsClass()
+        field1 = AttachmentFieldsClass()
+        field1.title = "Description :"
+        field1.value = description
+        attachment.attach_field(field1)
+
+        field2 = AttachmentFieldsClass()
+        field2.title = "Amount"
+        field2.value = amount
+        attachment.attach_field(field2)
+
+        message.attach(attachment)
+        return message.to_json()
 
     def read_invoice(self,args):
 
@@ -154,7 +191,34 @@ class CommandCentre(object):
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
         response = json.loads(r.text)
         print(response)
-        return r.status_code
+
+        message = MessageClass()
+        message.message_text = "Invoice details :"
+
+        attachment = MessageAttachmentsClass()
+        field1 = AttachmentFieldsClass()
+        field1.title = "Description :"
+        field1.value = response['Invoice']['Line'][0]['Description']
+        attachment.attach_field(field1)
+
+        field2 = AttachmentFieldsClass()
+        field2.title = "Amount :"
+        field2.value = response['Invoice']['TotalAmt']
+        attachment.attach_field(field2)
+
+        field3 = AttachmentFieldsClass()
+        field3.title = "DueDate :"
+        field3.value = response['Invoice']['DueDate']
+        attachment.attach_field(field3)
+
+        field4 = AttachmentFieldsClass()
+        field4.title = "Customer:"
+        field4.value = response['Invoice']['CustomerRef']['name']
+        attachment.attach_field(field4)
+
+        message.attach(attachment)
+        return message.to_json()
+
 
     def list_all_invoice_ids(self,args):
         ### Add YA message format
@@ -166,8 +230,29 @@ class CommandCentre(object):
         headers = {'Authorization': auth_header, 'content-type': 'application/json'}
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
         response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        print(response)
-        return r.status_code
+        #print(response)
+        data = response['IntuitResponse']['QueryResponse']['Invoice']
+
+        print(data)
+        message = MessageClass()
+        message.message_text = "All Invoice details :"
+
+        for i in range(0,len(data)):
+
+            attachment = MessageAttachmentsClass()
+            field1 = AttachmentFieldsClass()
+            field1.title = "Id :"
+            field1.value = i
+            attachment.attach_field(field1)
+
+            field2 = AttachmentFieldsClass()
+            field2.title = "Total Amount :"
+            field2.value = data[i]['TotalAmt']
+            attachment.attach_field(field2)
+            message.attach(attachment)
+
+        return message.to_json()
+
 
     def update_invoice(self,args):
 
@@ -202,7 +287,10 @@ class CommandCentre(object):
         r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers,json=payload)
         response = json.loads(r.text)
         print(response,r.status_code)
-        return r.status_code
+
+        message = MessageClass()
+        message.message_text = "Invoice updated"
+        return message.to_json()
 
     def get_all_customers(self,args):
         ### Add YA message format
@@ -213,8 +301,41 @@ class CommandCentre(object):
         headers = {'Authorization': auth_header, 'content-type': 'application/json'}
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
         response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        print(response)
-        return r.status_code
+        #print(response)
+
+        message = MessageClass()
+        message.message_text = " All Customer details :"
+
+        customer_data = response['IntuitResponse']['QueryResponse']['Customer']
+        print("-------------------")
+        print(customer_data)
+        print(len(customer_data))
+        print(customer_data[0]['DisplayName'].decode("utf-8"))
+        print(customer_data[0]['PrimaryEmailAddr']['Address'].decode("utf-8"))
+        print(customer_data[0]['Balance'].decode("utf-8"))
+
+        for i in range(0,len(customer_data)):
+
+            attachment = MessageAttachmentsClass()
+            field1 = AttachmentFieldsClass()
+            field1.title = "Name :"
+            field1.value = customer_data[i]['DisplayName'].decode("utf-8")
+            attachment.attach_field(field1)
+            try :
+                field2 = AttachmentFieldsClass()
+                field2.title = "Email Id :"
+                field2.value = customer_data[i]['PrimaryEmailAddr']['Address'].decode("utf-8")
+                attachment.attach_field(field2)
+            except:
+                pass
+
+            field3 = AttachmentFieldsClass()
+            field3.title = "Balance:"
+            field3.value = customer_data[i]['Balance'].decode("utf-8")
+            attachment.attach_field(field3)
+            message.attach(attachment)
+
+        return message.to_json()
 
     def get_customer_details(self,args):
         ### Add YA message format
@@ -227,7 +348,33 @@ class CommandCentre(object):
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
         response = json.loads(json.dumps(xmltodict.parse(r.text)))
         print(response)
-        return r.status_code
+
+        #'IntuitResponse'
+        #'DisplayName'
+        #'Balance'
+        #'PrimaryEmailAddr' 'Address'
+
+        message = MessageClass()
+        message.message_text = "Customer details :"
+
+        attachment = MessageAttachmentsClass()
+        field1 = AttachmentFieldsClass()
+        field1.title = "Name :"
+        field1.value = response['IntuitResponse']['Customer']['DisplayName']
+        attachment.attach_field(field1)
+
+        field2 = AttachmentFieldsClass()
+        field2.title = "Email Id :"
+        field2.value = response['IntuitResponse']['Customer']['PrimaryEmailAddr']['Address']
+        attachment.attach_field(field2)
+
+        field3 = AttachmentFieldsClass()
+        field3.title = "Balance:"
+        field3.value = response['IntuitResponse']['Customer']['Balance']
+        attachment.attach_field(field3)
+
+        message.attach(attachment)
+        return message.to_json()
 
     def create_customer(self,args):
         ### Add YA message format
@@ -270,5 +417,8 @@ class CommandCentre(object):
         r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers, json=payload)
         response = json.loads(r.text)
         print(response)
-        return r.status_code
 
+        message = MessageClass()
+        message.message_text = "New customer " + display_name +  " created successfully !"
+
+        return message.to_json()
