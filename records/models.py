@@ -19,6 +19,7 @@ class YellowUserToken(models.Model):
     yellowant_integration_id = models.IntegerField(default=0)
     webhook_id = models.CharField(max_length=100, default="")
     webhook_last_updated = models.DateTimeField(default=datetime.datetime.utcnow)
+    realmId = models.CharField(max_length=512, default="")
 
 class YellowAntRedirectState(models.Model):
     """
@@ -45,7 +46,7 @@ class QuickbookUserToken(models.Model):
     refreshToken = models.CharField(max_length=512, null=False)
     accessTokenExpiry = models.IntegerField()
     login_update_flag = models.BooleanField(default=False, max_length=100)
-
+    realmId = models.CharField(default="", max_length=512, null=False)
 class QuickUserDetails(models.Model):
     user_integration = models.ForeignKey(QuickbookUserToken, on_delete=models.CASCADE)
     realmId = models.CharField(max_length=512,null=False)

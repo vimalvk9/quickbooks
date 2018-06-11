@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # Local deployment settings
-BASE_URL = "https://3df7f5f4.ngrok.io"
+BASE_URL = "https://be28c37d.ngrok.io"
 
 
 ### YellowAnt OAuth specific settings ###
@@ -135,7 +135,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'quickbooks.wsgi.application'
-
+CSRF_COOKIE_SECURE = False
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases

@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from quickauth import urls as quickauth_urls
 from web import urls as web_urls
-from records.views import redirectToYellowAntAuthenticationPage, yellowantRedirecturl, yellowantapi
+from records.views import redirectToYellowAntAuthenticationPage, yellowantRedirecturl, yellowantapi, webhook
 from records.views import quickbookRedirecturl
 
 urlpatterns = [
@@ -45,9 +45,11 @@ urlpatterns = [
     # For getting command specific information from slack on executing a command
     url("yellowant-api/", yellowantapi, name="yellowant-api"),
 
-    url("",include(web_urls)),
-    #url("",include(quickauth_urls)),
 
+
+    url('webhook/(?P<hash_str>[^/]+)/', webhook, name='webhook'),
+    #url("",include(quickauth_urls)),
+    url("",include(web_urls)),
 
     #url("integrate_app/",integrate_app_account),
     #url(r'^$', RedirectView.as_view(pattern_name='sampleAppOAuth2:index')),
