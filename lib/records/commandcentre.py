@@ -45,11 +45,13 @@ class CommandCentre(object):
             'get_company_info' : self.get_company_info,
             'create_invoice' : self.create_invoice,
             'read_invoice': self.read_invoice,
+            'list_all_invoices' : self.list_all_invoices,
             'list_all_invoice_ids': self.list_all_invoice_ids,
             'update_invoice' : self.update_invoice,
             'get_all_customers':    self.get_all_customers,
             'get_customer_details' : self.get_customer_details,
-            'create_customer' : self.create_customer
+            'create_customer' : self.create_customer,
+            'list_all_customer_ids' : self.list_all_customer_ids
         }
 
         self.user_integration = YellowUserToken.objects.get\
@@ -136,28 +138,28 @@ class CommandCentre(object):
         ## Amount = UnitPrice X Quantity
 
         payload ={
-	    "Line": [{
-		    "Id": "1",
-		    "LineNum": 1,
-		    "Description": "Holiday party - gold level",
-		    "Amount": float(amount),
-		    "DetailType": "SalesItemLineDetail",
-		    "SalesItemLineDetail": {
-			"ItemRef": {
-				"value": str(sales_item_value),
-				"name": description
-			},
-			"UnitPrice": float(unit_price),
-			"Qty": quantity,
-			"TaxCodeRef": {
-				"value": "2"
-			        }
-		           }
-	         }],
-	         "CustomerRef": {
-		    "value": str(sales_item_value)
-	        }
-        }
+            "Line": [{
+                "Id": "1",
+                "LineNum": 1,
+                "Description": "Holiday party - gold level",
+                "Amount": float(amount),
+                "DetailType": "SalesItemLineDetail",
+                "SalesItemLineDetail": {
+                "ItemRef": {
+                    "value": str(sales_item_value),
+                    "name": description
+                },
+                "UnitPrice": float(unit_price),
+                "Qty": quantity,
+                "TaxCodeRef": {
+                    "value": "2"
+                        }
+                       }
+                 }],
+                 "CustomerRef": {
+                "value": str(sales_item_value)
+                }
+            }
 
         r = requests.post(settings.PRODUCTION_BASE_URL + route,headers=headers,json=payload)
         response = json.loads(r.text)
@@ -217,40 +219,6 @@ class CommandCentre(object):
         attachment.attach_field(field4)
 
         message.attach(attachment)
-        return message.to_json()
-
-
-    def list_all_invoice_ids(self,args):
-        ### Add YA message format
-
-        print("In list_all_invoice_ids")
-        route = "/v3/company/" + self.realmID + "/query?query=select * from Invoice"
-        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        auth_header = 'Bearer ' + bearer.accessToken
-        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
-        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        #print(response)
-        data = response['IntuitResponse']['QueryResponse']['Invoice']
-
-        print(data)
-        message = MessageClass()
-        message.message_text = "All Invoice details :"
-
-        for i in range(0,len(data)):
-
-            attachment = MessageAttachmentsClass()
-            field1 = AttachmentFieldsClass()
-            field1.title = "Id :"
-            field1.value = i
-            attachment.attach_field(field1)
-
-            field2 = AttachmentFieldsClass()
-            field2.title = "Total Amount :"
-            field2.value = data[i]['TotalAmt']
-            attachment.attach_field(field2)
-            message.attach(attachment)
-
         return message.to_json()
 
 
@@ -422,3 +390,82 @@ class CommandCentre(object):
         message.message_text = "New customer " + display_name +  " created successfully !"
 
         return message.to_json()
+
+    def list_all_invoices(self,args):
+        ### Add YA message format
+        print("In list_all_invoice_ids")
+        route = "/v3/company/" + self.realmID + "/query?query=select * from Invoice"
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+        response = json.loads(json.dumps(xmltodict.parse(r.text)))
+        # print(response)
+        data = response['IntuitResponse']['QueryResponse']['Invoice']
+
+        print(data)
+        message = MessageClass()
+        message.message_text = "All Invoice details :"
+
+        for i in range(0, len(data)):
+            attachment = MessageAttachmentsClass()
+            field1 = AttachmentFieldsClass()
+            field1.title = "Id :"
+            field1.value = data[i]['Id']
+            attachment.attach_field(field1)
+
+            field2 = AttachmentFieldsClass()
+            field2.title = "Total Amount :"
+            field2.value = data[i]['TotalAmt']
+            attachment.attach_field(field2)
+            message.attach(attachment)
+
+        return message.to_json()
+
+    def list_all_customer_ids(self, args):
+
+        print("In list_all_customer_ids")
+        route = "/v3/company/" + self.realmID + "/query?query=select * from Customer"
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+        response = json.loads(json.dumps(xmltodict.parse(r.text)))
+        # print(response)
+
+        customer_data = response['IntuitResponse']['QueryResponse']['Customer']
+
+        m = MessageClass()
+        m.message_text = "This is list all invoiced picklist function"
+
+        data = []
+        #customer_data[i]
+        for i in range(0,len(customer_data)):
+            data.append({"id":"12"})
+        m.data = data
+        return m.to_json()
+
+
+    def list_all_invoice_ids(self, args):
+
+        print("In list_all_invoice_ids")
+        # route = "/v3/company/" + self.realmID + "/query?query=select * from Invoice"
+        # bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        # auth_header = 'Bearer ' + bearer.accessToken
+        # headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+        # r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+        # response = json.loads(json.dumps(xmltodict.parse(r.text)))
+        # # print(response)
+        # data = response['IntuitResponse']['QueryResponse']['Invoice']
+        # print(data)
+        m = MessageClass()
+        m.message_text = "This is list all invoices picklist function"
+        #data[i]["Id"]
+
+        data = []
+
+        # for i in range(0,len(data)):
+        data.append({"id":"12"})
+
+        m.data = data
+        return m.to_json()
