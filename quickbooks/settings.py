@@ -15,9 +15,10 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+BASE_HREF = "/"
 
 # Local deployment settings
-BASE_URL = "https://be28c37d.ngrok.io"
+BASE_URL = "https://5751287a.ngrok.io"
 
 
 ### YellowAnt OAuth specific settings ###
@@ -53,7 +54,7 @@ YELLOWANT_VERIFICATION_TOKEN = "odDHZLOQ9MzkQohL0q8PBcqk9NH5Myv3nDH5GspBKfuAbUXS
 
 ### Quickbooks OAuth specific settings ###
 
-DISCOVERY_DOCUMENT = 'https://developer.api.intuit.com/.well-known/openid_sandbox_configuration/'
+DISCOVERY_DOCUMENT = "https://appcenter.intuit.com/connect/oauth2" #'https://developer.api.intuit.com/.well-known/openid_sandbox_configuration/'
 QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
 QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
 QUICKBOOKS_REDIRECT_URL  = BASE_URL + "/quickbookauthurl/"
@@ -96,14 +97,15 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
 
-    'web',
+    'lib.web',
+    'lib.quickauth',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'records',
+    'lib.records',
 ]
 
 MIDDLEWARE = [

@@ -16,10 +16,10 @@ Including another URLconf
 from django.conf.urls import url,include
 from django.contrib import admin
 from django.views.generic.base import RedirectView
-from lib.quickauth import urls as quickauth_urls
-from lib.web import urls as web_urls
-from lib.records.views import redirectToYellowAntAuthenticationPage, yellowantRedirecturl, yellowantapi, webhook
-from lib.records.views import quickbookRedirecturl
+from ..lib.quickauth import urls as quickauth_urls
+from ..lib.web import urls as web_urls
+from ..lib.records.views import redirectToYellowAntAuthenticationPage, yellowantRedirecturl, yellowantapi, webhook
+from ..lib.records.views import quickbookRedirecturl
 
 urlpatterns = [
 
