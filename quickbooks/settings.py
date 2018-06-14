@@ -18,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_HREF = "/"
 
 # Local deployment settings
-BASE_URL = "https://5751287a.ngrok.io"
+BASE_URL = "https://692a9933.ngrok.io"
 
 
 ### YellowAnt OAuth specific settings ###

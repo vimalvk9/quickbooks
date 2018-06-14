@@ -406,13 +406,6 @@ def yellowantapi(request):
 
         # Processing command in some class Command and sending a Message Object
             message = CommandCentre(data["user"], service_application, function_name, args).parse()
-            if function_name == 'create_invoice':
-                add_new_invoice(request)
-            if function_name == 'create_customer':
-                add_new_customer(request)
-            if function_name == 'update_invoice':
-                update_invoice(request)
-
         # Appropriate function calls for corresponding webhook functions
             # Figure out
 

@@ -74,69 +74,95 @@ class CommandCentre(object):
 
 
     def get_company_info(self,args):
-        #### Add yellowant message formatting
+
         print("In get_company_info")
+
+        # API parameteres for getting company information
         route = '/v3/company/{0}/companyinfo/{0}'.format(self.realmID)
-        # Refresh access token
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        # bearer = Bearer.accessToken
         auth_header = 'Bearer ' + bearer.accessToken
-
         headers = {'Authorization': auth_header, 'accept': 'application/json'}
+
+        # Consuming the API
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        status_code = r.status_code
-        if status_code != 200:
-            response = ''
-            return response, status_code
 
-        response = json.loads(r.text)
-        print(response)
-        print(type(response))
+        # Response check
+        if r.status_code == requests.codes.ok:
 
+            # Getting response in JSON
+            response = json.loads(r.text)
 
+            print(response)
+            print(type(response))
 
-        # Creating message objects to structure the message to be shown
-        message = MessageClass()
-        message.message_text = "Company Details:"
+            # Creating message objects to structure the message to be shown
+            message = MessageClass()
+            message.message_text = "Company Details:"
 
-        attachment = MessageAttachmentsClass()
-        field1 = AttachmentFieldsClass()
-        field1.title = "Name :"
-        field1.value = response["CompanyInfo"]['LegalName']
-        attachment.attach_field(field1)
+            attachment = MessageAttachmentsClass()
+            try:
+                field1 = AttachmentFieldsClass()
+                field1.title = "Name :"
+                field1.value = response["CompanyInfo"]['LegalName']
+                attachment.attach_field(field1)
+            except:
+                pass
 
-        field2 = AttachmentFieldsClass()
-        field2.title = "Created at"
-        field2.value = response["CompanyInfo"]['CompanyStartDate']
-        attachment.attach_field(field2)
+            try:
+                field2 = AttachmentFieldsClass()
+                field2.title = "Compnay start date :"
+                field2.value = response["CompanyInfo"]['CompanyStartDate']
+                attachment.attach_field(field2)
+            except:
+                pass
 
-        field3 = AttachmentFieldsClass()
-        field3.title = "Email Id"
-        field3.value = response["CompanyInfo"]['Email']['Address']
-        attachment.attach_field(field3)
+            try:
+                field3 = AttachmentFieldsClass()
+                field3.title = "Email Id :"
+                field3.value = response["CompanyInfo"]['Email']['Address']
+                attachment.attach_field(field3)
+            except:
+                pass
 
-        message.attach(attachment)
-        return message.to_json()
+            try:
+                field4 = AttachmentFieldsClass()
+                field4.title = "Contact Number :"
+                field4.value = response["CompanyInfo"]['PrimaryPhone']['FreeFormNumber']
+                attachment.attach_field(field4)
+            except:
+                pass
+
+            message.attach(attachment)
+            return message.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
 
 
     def create_invoice(self,args):
 
-        #### Add yellowant message formatting
         print("In create invoice")
-        route = "/v3/company/" +  self.realmID + "/invoice"
 
+        # API call parameters for creating an invoice
+        route = "/v3/company/" +  self.realmID + "/invoice"
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
         auth_header = 'Bearer ' + bearer.accessToken
         headers = {'Authorization': auth_header, 'accept': 'application/json'}
 
         print(args)
+
+        # Fetching arguments from slack
         amount = args['amount']
         description = args['description']
         sales_item_value = args['sales_item_value']
         quantity =  args["quantity"]
         unit_price = args['unit_price']
-        ## Amount = UnitPrice X Quantity
 
+        ###  Amount = UnitPrice X Quantity must satisfy  ###
+
+        # payload for API call
         payload ={
             "Line": [{
                 "Id": "1",
@@ -161,202 +187,350 @@ class CommandCentre(object):
                 }
             }
 
+        # Consuming the API
         r = requests.post(settings.PRODUCTION_BASE_URL + route,headers=headers,json=payload)
-        response = json.loads(r.text)
-        print(response)
-        message = MessageClass()
-        message.message_text = "New Invoice Created :"
 
-        attachment = MessageAttachmentsClass()
-        field1 = AttachmentFieldsClass()
-        field1.title = "Description :"
-        field1.value = description
-        attachment.attach_field(field1)
+        # Response check
+        if (r.status_code == requests.codes.ok):
+            response = json.loads(r.text)
 
-        field2 = AttachmentFieldsClass()
-        field2.title = "Amount"
-        field2.value = amount
-        attachment.attach_field(field2)
+            print(response)
 
-        message.attach(attachment)
-        return message.to_json()
-
-    def read_invoice(self,args):
-
-        ### Add YA message format
-        print("In read invoice")
-        invoiceId = args['invoice_id']
-        route = "/v3/company/" + self.realmID + "/invoice/" + invoiceId
-        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        auth_header = 'Bearer ' + bearer.accessToken
-        headers = {'Authorization': auth_header, 'accept': 'application/json'}
-        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        response = json.loads(r.text)
-        print(response)
-
-        message = MessageClass()
-        message.message_text = "Invoice details :"
-
-        attachment = MessageAttachmentsClass()
-        field1 = AttachmentFieldsClass()
-        field1.title = "Description :"
-        field1.value = response['Invoice']['Line'][0]['Description']
-        attachment.attach_field(field1)
-
-        field2 = AttachmentFieldsClass()
-        field2.title = "Amount :"
-        field2.value = response['Invoice']['TotalAmt']
-        attachment.attach_field(field2)
-
-        field3 = AttachmentFieldsClass()
-        field3.title = "DueDate :"
-        field3.value = response['Invoice']['DueDate']
-        attachment.attach_field(field3)
-
-        field4 = AttachmentFieldsClass()
-        field4.title = "Customer:"
-        field4.value = response['Invoice']['CustomerRef']['name']
-        attachment.attach_field(field4)
-
-        message.attach(attachment)
-        return message.to_json()
-
-
-    def update_invoice(self,args):
-
-        ## Bug fixed
-        ### Add YA message format
-        print("In update_invoice")
-
-        id = args['invoice_id']
-        due_date = args['due_date']
-        syn_token = args['syn_token']
-        #Fetching the invoice
-        route = "/v3/company/" + self.realmID + "/invoice/" + id
-        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        auth_header = 'Bearer ' + bearer.accessToken
-        headers = {'Authorization': auth_header, 'accept': 'application/json'}
-        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        data = {}
-        response = json.loads(r.text)
-        #print(response)
-        data = response['Invoice']
-        print("Invoice part")
-        print(data)
-
-        #Updating the invoice
-        payload = data
-        payload["DueDate"] = due_date
-        payload["SyncToken"] = syn_token
-        route = "/v3/company/" + self.realmID + "/invoice"
-        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        auth_header = 'Bearer ' + bearer.accessToken
-        headers = {'Authorization': auth_header, 'accept': 'application/json'}
-        r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers,json=payload)
-        response = json.loads(r.text)
-        print(response,r.status_code)
-
-        message = MessageClass()
-        message.message_text = "Invoice updated"
-        return message.to_json()
-
-    def get_all_customers(self,args):
-        ### Add YA message format
-        print("In get_all_customers")
-        route = "/v3/company/" + self.realmID + "/query?query=select * from Customer"
-        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        auth_header = 'Bearer ' + bearer.accessToken
-        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
-        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        #print(response)
-
-        message = MessageClass()
-        message.message_text = " All Customer details :"
-
-        customer_data = response['IntuitResponse']['QueryResponse']['Customer']
-        print("-------------------")
-        print(customer_data)
-        print(len(customer_data))
-        print(customer_data[0]['DisplayName'].decode("utf-8"))
-        print(customer_data[0]['PrimaryEmailAddr']['Address'].decode("utf-8"))
-        print(customer_data[0]['Balance'].decode("utf-8"))
-
-        for i in range(0,len(customer_data)):
+            # Creating message from YA SDK
+            message = MessageClass()
+            message.message_text = "New Invoice Created :"
 
             attachment = MessageAttachmentsClass()
-            field1 = AttachmentFieldsClass()
-            field1.title = "Name :"
-            field1.value = customer_data[i]['DisplayName'].decode("utf-8")
-            attachment.attach_field(field1)
-            try :
+            try:
+                field1 = AttachmentFieldsClass()
+                field1.title = "Id :"
+                field1.value = description
+                attachment.attach_field(field1)
+            except:
+                pass
+
+            try:
                 field2 = AttachmentFieldsClass()
-                field2.title = "Email Id :"
-                field2.value = customer_data[i]['PrimaryEmailAddr']['Address'].decode("utf-8")
+                field2.title = "Amount"
+                field2.value = amount
                 attachment.attach_field(field2)
             except:
                 pass
 
-            field3 = AttachmentFieldsClass()
-            field3.title = "Balance:"
-            field3.value = customer_data[i]['Balance'].decode("utf-8")
-            attachment.attach_field(field3)
+            try:
+                field3 = AttachmentFieldsClass()
+                field3.title = "Description :"
+                field3.value = description
+                attachment.attach_field(field3)
+            except:
+                pass
+
             message.attach(attachment)
+            return message.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
 
-        return message.to_json()
 
-    def get_customer_details(self,args):
-        ### Add YA message format
-        print("In get_customer_details")
-        customerId = args['customer_id']
-        route = "/v3/company/" + self.realmID + "/customer/" + customerId
-        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        auth_header = 'Bearer ' + bearer.accessToken
-        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
-        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        print(response)
+    def read_invoice(self,args):
 
-        #'IntuitResponse'
-        #'DisplayName'
-        #'Balance'
-        #'PrimaryEmailAddr' 'Address'
+        print("In read invoice")
 
-        message = MessageClass()
-        message.message_text = "Customer details :"
+        # Arguments passed from slack
+        invoiceId = args['invoice_id']
 
-        attachment = MessageAttachmentsClass()
-        field1 = AttachmentFieldsClass()
-        field1.title = "Name :"
-        field1.value = response['IntuitResponse']['Customer']['DisplayName']
-        attachment.attach_field(field1)
-
-        field2 = AttachmentFieldsClass()
-        field2.title = "Email Id :"
-        field2.value = response['IntuitResponse']['Customer']['PrimaryEmailAddr']['Address']
-        attachment.attach_field(field2)
-
-        field3 = AttachmentFieldsClass()
-        field3.title = "Balance:"
-        field3.value = response['IntuitResponse']['Customer']['Balance']
-        attachment.attach_field(field3)
-
-        message.attach(attachment)
-        return message.to_json()
-
-    def create_customer(self,args):
-        ### Add YA message format
-        print("In create_customer")
-        route = "/v3/company/" + self.realmID + "/customer"
-
+        # API call parameters for reading an invoice
+        route = "/v3/company/" + self.realmID + "/invoice/" + invoiceId
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
         auth_header = 'Bearer ' + bearer.accessToken
         headers = {'Authorization': auth_header, 'accept': 'application/json'}
 
+        # Consuming the API
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+
+        # Response check
+        if r.status_code == requests.codes.ok:
+
+            # Fetching response in JSON
+            response = json.loads(r.text)
+            print(response)
+
+            # Creating a message object from YA SDK
+            message = MessageClass()
+            message.message_text = "Invoice details :"
+
+            attachment = MessageAttachmentsClass()
+            try:
+                field1 = AttachmentFieldsClass()
+                field1.title = "Description :"
+                field1.value = response['Invoice']['Line'][0]['Description']
+                attachment.attach_field(field1)
+            except:
+                pass
+            try:
+                field2 = AttachmentFieldsClass()
+                field2.title = "Amount :"
+                field2.value = response['Invoice']['TotalAmt']
+                attachment.attach_field(field2)
+            except:
+                pass
+
+            try:
+                field3 = AttachmentFieldsClass()
+                field3.title = "DueDate :"
+                field3.value = response['Invoice']['DueDate']
+                attachment.attach_field(field3)
+            except:
+                pass
+
+            try:
+                field4 = AttachmentFieldsClass()
+                field4.title = "Customer:"
+                field4.value = response['Invoice']['CustomerRef']['name']
+                attachment.attach_field(field4)
+            except:
+                pass
+
+            message.attach(attachment)
+            return message.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
+
+
+    def update_invoice(self,args):
+
+        print("In update_invoice")
+
+        # Arguments passed from slack
+        id = args['invoice_id']
+        due_date = args['due_date']
+        syn_token = args['syn_token']
+
+        ## First we make an API call to fetch the particular invoice
+
+        # API call parameters to fetch the invoice
+        route = "/v3/company/" + self.realmID + "/invoice/" + id
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'accept': 'application/json'}
+
+        # Consuming the API
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+
+        # Response check
+        if r.status_code == requests.codes.ok:
+
+            # Getting response in JSON
+            response = json.loads(r.text)
+            #print(response)
+            data = response['Invoice']
+            print("Invoice part")
+            print(data)
+
+            # Updating the invoice
+            payload = data
+            payload["DueDate"] = due_date
+            payload["SyncToken"] = syn_token
+
+            ## Once invoice is successfully fetched, we update it
+
+            # API call parameters to update the invoice
+            route = "/v3/company/" + self.realmID + "/invoice"
+            bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+            auth_header = 'Bearer ' + bearer.accessToken
+            headers = {'Authorization': auth_header, 'accept': 'application/json'}
+
+            # Consuming the API
+            r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers,json=payload)
+
+            # Response check
+            if r.status_code == requests.codes.ok:
+
+                # Getting response in JSON
+                response = json.loads(r.text)
+                print(response,r.status_code)
+
+                message = MessageClass()
+                message.message_text = "Invoice updated"
+                return message.to_json()
+            else:
+                return "{0}: {1}".format(r.status_code, r.text)
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
+
+    def get_all_customers(self,args):
+
+        print("In get_all_customers")
+
+        # API call parameters for getting all customers
+        route = "/v3/company/" + self.realmID + "/query?query=select * from Customer"
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+
+        # Consuming the API
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+
+        # Error check
+        if r.status_code == requests.codes.ok:
+
+            # Getting response in JSON format
+            response = json.loads(json.dumps(xmltodict.parse(r.text)))
+
+            #print(response)
+
+            # Making message from YA SDK
+            message = MessageClass()
+            message.message_text = " All Customer details :"
+
+            customer_data = response['IntuitResponse']['QueryResponse']['Customer']
+            print("-------------------")
+            print(customer_data)
+            print(len(customer_data))
+            print(customer_data[0]['DisplayName'])
+            print(customer_data[0]['PrimaryEmailAddr']['Address'])
+            print(customer_data[0]['Balance'])
+
+            for i in range(0,len(customer_data)):
+
+                attachment = MessageAttachmentsClass()
+                try:
+                    field1 = AttachmentFieldsClass()
+                    field1.title = "Customer ID :"
+                    field1.value = customer_data[i]['Id']
+                    attachment.attach_field(field1)
+                except:
+                    pass
+
+                try:
+                    field2 = AttachmentFieldsClass()
+                    field2.title = "Name :"
+                    field2.value = customer_data[i]['DisplayName']
+                    attachment.attach_field(field2)
+                except:
+                    pass
+
+                try :
+                    field3 = AttachmentFieldsClass()
+                    field3.title = "Email Id :"
+                    field3.value = customer_data[i]['PrimaryEmailAddr']['Address']
+                    attachment.attach_field(field3)
+                except:
+                    pass
+
+                try:
+                    field4 = AttachmentFieldsClass()
+                    field4.title = "Balance:"
+                    field4.value = customer_data[i]['Balance']
+                    attachment.attach_field(field4)
+                except:
+                    pass
+                message.attach(attachment)
+            return message.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
+
+    def get_customer_details(self,args):
+
+        print("In get_customer_details")
+
+        # Fetching arguments passed from Slack
+        customerId = args['customer_id']
+
+        # API call parameters for getting customer details
+        route = "/v3/company/" + self.realmID + "/customer/" + customerId
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+
+        # Consuming the API
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
+
+        # Response check
+        if r.status_code == requests.codes.ok:
+
+            # Getting response in JSON
+            response = json.loads(json.dumps(xmltodict.parse(r.text)))
+            print(response)
+
+            #'IntuitResponse'
+            #'DisplayName'
+            #'Balance'
+            #'PrimaryEmailAddr' 'Address'
+
+            # Creating message object using YA SDK
+            message = MessageClass()
+            message.message_text = "Customer details :"
+
+            attachment = MessageAttachmentsClass()
+            try:
+                field1 = AttachmentFieldsClass()
+                field1.title = "Name :"
+                field1.value = response['IntuitResponse']['Customer']['DisplayName']
+                attachment.attach_field(field1)
+            except:
+                pass
+
+            try:
+                field2 = AttachmentFieldsClass()
+                field2.title = "Email Id :"
+                field2.value = response['IntuitResponse']['Customer']['PrimaryEmailAddr']['Address']
+                attachment.attach_field(field2)
+            except:
+                pass
+
+            try:
+                field3 = AttachmentFieldsClass()
+                field3.title = "Balance:"
+                field3.value = response['IntuitResponse']['Customer']['Balance']
+                attachment.attach_field(field3)
+            except:
+                pass
+
+            try:
+                field4 = AttachmentFieldsClass()
+                field4.title = "Customer Id:"
+                field4.value = response['IntuitResponse']['Customer']['Id']
+                attachment.attach_field(field4)
+            except:
+                pass
+
+            message.attach(attachment)
+            return message.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
+
+    def create_customer(self,args):
+
+
+        print("In create_customer")
+
+        # API call parameters for creating a customer
+        route = "/v3/company/" + self.realmID + "/customer"
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'accept': 'application/json'}
+
+        # Fetching the arguments passed from slack
         notes = args['notes']
         display_name = args['display_name']
         email = args['e-mail']
 
+        # payload for API call
         payload = {
             "BillAddr": {
                 "Line1": "",
@@ -382,90 +556,202 @@ class CommandCentre(object):
             }
         }
 
+        # Consuming the API
         r = requests.post(settings.PRODUCTION_BASE_URL + route, headers=headers, json=payload)
-        response = json.loads(r.text)
-        print(response)
 
-        message = MessageClass()
-        message.message_text = "New customer " + display_name +  " created successfully !"
+        # Response check
+        if (r.status_code == requests.codes.ok):
 
-        return message.to_json()
+            # Getting the response
+            response = json.loads(r.text)
+
+            print(response)
+
+            # Creating message using YA SDK
+            message = MessageClass()
+            message.message_text = "New customer " + display_name +  " created successfully !"
+            attachment = MessageAttachmentsClass()
+            try:
+                field1 = AttachmentFieldsClass()
+                field1.title = "Name :"
+                field1.value = display_name
+                attachment.attach_field(field1)
+            except:
+                pass
+
+            try:
+                field2 = AttachmentFieldsClass()
+                field2.title = "ID :"
+                field2.value = response["Customer"]["Id"]
+                attachment.attach_field(field2)
+            except:
+                pass
+            try:
+                field3 = AttachmentFieldsClass()
+                field3.title = "Balance :"
+                field3.value = response["Customer"]["Balance"]
+                attachment.attach_field(field3)
+            except:
+                pass
+            message.attach(attachment)
+            return message.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
 
     def list_all_invoices(self,args):
-        ### Add YA message format
+
         print("In list_all_invoice_ids")
+
+        # API parameters for getting all invoices
         route = "/v3/company/" + self.realmID + "/query?query=select * from Invoice"
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
         auth_header = 'Bearer ' + bearer.accessToken
         headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+
+        # Consuming the API
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        # print(response)
-        data = response['IntuitResponse']['QueryResponse']['Invoice']
 
-        print(data)
-        message = MessageClass()
-        message.message_text = "All Invoice details :"
+        # Response check
+        if r.status_code == requests.codes.ok:
 
-        for i in range(0, len(data)):
-            attachment = MessageAttachmentsClass()
-            field1 = AttachmentFieldsClass()
-            field1.title = "Id :"
-            field1.value = data[i]['Id']
-            attachment.attach_field(field1)
+            # Getting response in JSON
+            response = json.loads(json.dumps(xmltodict.parse(r.text)))
 
-            field2 = AttachmentFieldsClass()
-            field2.title = "Total Amount :"
-            field2.value = data[i]['TotalAmt']
-            attachment.attach_field(field2)
-            message.attach(attachment)
+            # print(response)
+            data = response['IntuitResponse']['QueryResponse']['Invoice']
 
-        return message.to_json()
+            print(data)
+
+            # Creating message object from YA SDK
+            message = MessageClass()
+            message.message_text = "All Invoice details :"
+
+            for i in range(0, len(data)):
+                attachment = MessageAttachmentsClass()
+                try:
+                    field1 = AttachmentFieldsClass()
+                    field1.title = "Invoice Id :"
+                    field1.value = data[i]['Id']
+                    attachment.attach_field(field1)
+                except:
+                    pass
+
+                try:
+                    field2 = AttachmentFieldsClass()
+                    field2.title = "Total Amount :"
+                    field2.value = data[i]['TotalAmt']
+                    attachment.attach_field(field2)
+                    message.attach(attachment)
+                except:
+                    pass
+
+                try:
+                    field3 = AttachmentFieldsClass()
+                    field3.title = "For :"
+                    field3.value = data[i]['CustomerRef']['@name']
+                    attachment.attach_field(field3)
+                    message.attach(attachment)
+                except:
+                    pass
+
+                try:
+                    field4 = AttachmentFieldsClass()
+                    field4.title = "Due date :"
+                    field4.value = data[i]['DueDate']
+                    attachment.attach_field(field4)
+                    message.attach(attachment)
+                except:
+                    pass
+
+            return message.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
 
     def list_all_customer_ids(self, args):
+        '''
+        Picklist function to get list of customer ids
+        '''
 
         print("In list_all_customer_ids")
+
+        # API call parameters for getting all customer ids
         route = "/v3/company/" + self.realmID + "/query?query=select * from Customer"
         bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
         auth_header = 'Bearer ' + bearer.accessToken
         headers = {'Authorization': auth_header, 'content-type': 'application/json'}
+
+        # Consuming the API
         r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        # print(response)
 
-        customer_data = response['IntuitResponse']['QueryResponse']['Customer']
+        # Response check
+        if r.status_code == requests.codes.ok:
 
-        m = MessageClass()
-        m.message_text = "This is list all invoiced picklist function"
+            # Fetching response in JSON
+            response = json.loads(json.dumps(xmltodict.parse(r.text)))
+            # print(response)
 
-        data = []
-        #customer_data[i]
-        for i in range(0,len(customer_data)):
-            data.append({"id":"12"})
-        m.data = data
-        return m.to_json()
+            customer_data = response['IntuitResponse']['QueryResponse']['Customer']
+
+            # Creating a message object using YA SDK functions
+            m = MessageClass()
+            m.message_text = "This is list all customer picklist function"
+
+            ### Hardcoded
+            ### Change It !
+            data = []
+            #customer_data[i]
+            for i in range(0,len(customer_data)):
+                data.append({"id":"12"})
+            m.data = data
+            return m.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
 
 
     def list_all_invoice_ids(self, args):
 
         print("In list_all_invoice_ids")
-        # route = "/v3/company/" + self.realmID + "/query?query=select * from Invoice"
-        # bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
-        # auth_header = 'Bearer ' + bearer.accessToken
-        # headers = {'Authorization': auth_header, 'content-type': 'application/json'}
-        # r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
-        # response = json.loads(json.dumps(xmltodict.parse(r.text)))
-        # # print(response)
-        # data = response['IntuitResponse']['QueryResponse']['Invoice']
-        # print(data)
-        m = MessageClass()
-        m.message_text = "This is list all invoices picklist function"
-        #data[i]["Id"]
 
-        data = []
+        # API call parameters to get all invoice ids
+        route = "/v3/company/" + self.realmID + "/query?query=select * from Invoice"
+        bearer = getBearerTokenFromRefreshToken(self.quickbook_access_token_object.refreshToken, self.user_integration)
+        auth_header = 'Bearer ' + bearer.accessToken
+        headers = {'Authorization': auth_header, 'content-type': 'application/json'}
 
-        # for i in range(0,len(data)):
-        data.append({"id":"12"})
+        # Consuming the API
+        r = requests.get(settings.PRODUCTION_BASE_URL + route, headers=headers)
 
-        m.data = data
-        return m.to_json()
+        # Response check
+        if r.status_code == requests.codes.ok:
+
+            # Fetching response in JSON
+            response = json.loads(json.dumps(xmltodict.parse(r.text)))
+            # print(response)
+            data = response['IntuitResponse']['QueryResponse']['Invoice']
+            print(data)
+            m = MessageClass()
+            m.message_text = "This is list all invoices picklist function"
+            #data[i]["Id"]
+
+            ## Hardcoded
+            ## Change It
+
+            data = []
+            # for i in range(0,len(data)):
+            data.append({"id":"12"})
+            m.data = data
+            return m.to_json()
+        else:
+            m = MessageClass()
+            d = json.loads(r.text)
+            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
