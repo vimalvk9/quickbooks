@@ -1,10 +1,11 @@
+import pytz
 import requests
 import base64
 import json
 import random
 
 from jose import jwk
-from datetime import datetime
+import datetime
 
 from django.conf import settings
 
@@ -62,30 +63,36 @@ def getBearerTokenFromRefreshToken(refresh_Token,user_integration):
     print(user_integration)
     qut = QuickbookUserToken.objects.get(user_integration=user_integration)
     print(qut)
-    token_endpoint = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer" #getDiscoveryDocument.token_endpoint
-    auth_header = 'Basic ' + stringToBase64(settings.QUICKBOOKS_CLIENT_ID + ':' + settings.QUICKBOOKS_CLIENT_SECRET)
-    headers = {'Accept': 'application/json', 'content-type': 'application/x-www-form-urlencoded',
-               'Authorization': auth_header}
-    payload = {
-        'refresh_token': refresh_Token,
-        'grant_type': 'refresh_token'
-    }
-    r = requests.post(token_endpoint, data=payload, headers=headers)
-    bearer_raw = json.loads(r.text)
 
-    if 'id_token' in bearer_raw:
-        idToken = bearer_raw['id_token']
+    if qut.accessToken_last_refreshed + \
+            datetime.timedelta(minutes=45) > pytz.utc.localize(datetime.datetime.utcnow()):
+        print("------")
+        print("Refreshing token")
+        token_endpoint = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer" #getDiscoveryDocument.token_endpoint
+        auth_header = 'Basic ' + stringToBase64(settings.QUICKBOOKS_CLIENT_ID + ':' + settings.QUICKBOOKS_CLIENT_SECRET)
+        headers = {'Accept': 'application/json', 'content-type': 'application/x-www-form-urlencoded',
+                   'Authorization': auth_header}
+        payload = {
+            'refresh_token': refresh_Token,
+            'grant_type': 'refresh_token'
+        }
+        r = requests.post(token_endpoint, data=payload, headers=headers)
+        bearer_raw = json.loads(r.text)
+
+        if 'id_token' in bearer_raw:
+            idToken = bearer_raw['id_token']
+        else:
+            idToken = None
+
+        qut.refreshExpiry = bearer_raw['x_refresh_token_expires_in']
+        qut.accessToken = bearer_raw['access_token']
+        qut.refreshToken = bearer_raw['refresh_token']
+        qut.accessTokenExpiry = bearer_raw['expires_in']
+        qut.save()
+        return Bearer(bearer_raw['x_refresh_token_expires_in'], bearer_raw['access_token'], bearer_raw['token_type'],
+                      bearer_raw['refresh_token'], bearer_raw['expires_in'], idToken=idToken)
     else:
-        idToken = None
-
-    qut.refreshExpiry = bearer_raw['x_refresh_token_expires_in']
-    qut.accessToken = bearer_raw['access_token']
-    qut.refreshToken = bearer_raw['refresh_token']
-    qut.accessTokenExpiry = bearer_raw['expires_in']
-    qut.save()
-    return Bearer(bearer_raw['x_refresh_token_expires_in'], bearer_raw['access_token'], bearer_raw['token_type'],
-                  bearer_raw['refresh_token'], bearer_raw['expires_in'], idToken=idToken)
-
+        return qut.accessToken
 
 def getUserProfile(access_token):
     print("s4")

@@ -47,6 +47,8 @@ class QuickbookUserToken(models.Model):
     accessTokenExpiry = models.IntegerField()
     login_update_flag = models.BooleanField(default=False, max_length=100)
     realmId = models.CharField(default="", max_length=512, null=False)
+    accessToken_last_refreshed = models.DateTimeField(default=datetime.datetime.utcnow)
+
 class QuickUserDetails(models.Model):
     user_integration = models.ForeignKey(QuickbookUserToken, on_delete=models.CASCADE)
     realmId = models.CharField(max_length=512,null=False)

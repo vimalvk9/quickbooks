@@ -145,11 +145,11 @@ def quickbookRedirecturl(request):
     error = request.GET.get('error', None)
     print(error)
 
-    # # Checking status of auth request
-    # if error == 'access_denied':
-    #     return HttpResponse('Access denied')
-    # if state is None:
-    #     return HttpResponseBadRequest()
+    # Checking status of auth request
+    if error == 'access_denied':
+        return HttpResponse('Access denied')
+    if state is None:
+        return HttpResponseBadRequest()
     # elif state != get_CSRF_token(request):  # validate against CSRF attacks
     #     return HttpResponse('unauthorized', status=401)
 
@@ -209,29 +209,32 @@ def quickbookRedirecturl(request):
 @csrf_exempt
 def webhook(request, hash_str=""):
     print("Inside webhook")
+    code = request.GET.get("code", False)
 
-    data =  (request.body.decode('utf-8'))
-    response_json = json.loads(data)
-    print(response_json)
+    if code == request.codes.ok:
+        data =  (request.body.decode('utf-8'))
+        response_json = json.loads(data)
+        print(response_json)
 
-    try:
-        operation = response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['operation']
-        name = response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['name']
-    except:
-        pass
+        try:
+            operation = response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['operation']
+            name = response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['name']
+        except:
+            pass
 
-    print(operation)
+        print(operation)
 
-    if operation == 'Create':
-        if name == 'Customer':
-            add_new_customer(request,hash_str)
+        if operation == 'Create':
+            if name == 'Customer':
+                add_new_customer(request,hash_str)
+            else:
+                add_new_invoice(request,hash_str)
         else:
-            add_new_invoice(request,hash_str)
+            update_invoice(request,hash_str)
+
+        return HttpResponse('OK',status=200)
     else:
-        update_invoice(request,hash_str)
-
-    return HttpResponse('OK',status=200)
-
+        return HttpResponse(status=400)
 
 def update_invoice(request,webhook_id):
 
@@ -241,47 +244,58 @@ def update_invoice(request,webhook_id):
     print("In update_invoice")
 
     # Extracting necessary data
-    data = (request.body.decode('utf-8'))
-    response_json = json.loads(data)
+    code = request.GET.get("code", False)
 
-    yellow_obj = YellowUserToken.objects.get(webhook_id=webhook_id)
-    print(yellow_obj)
-    access_token = yellow_obj.yellowant_token
-    print(access_token)
-    integration_id = yellow_obj.yellowant_integration_id
-    service_application = str(integration_id)
-    print(service_application)
+    if code == request.codes.ok:
+        data = (request.body.decode('utf-8'))
+        response_json = json.loads(data)
+
+        try:
+            yellow_obj = YellowUserToken.objects.get(webhook_id=webhook_id)
+            print(yellow_obj)
+            access_token = yellow_obj.yellowant_token
+            print(access_token)
+            integration_id = yellow_obj.yellowant_integration_id
+            service_application = str(integration_id)
+            print(service_application)
 
 
-    # Creating message object for webhook message
-    webhook_message = MessageClass()
-    webhook_message.message_text = "Invoice " + str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id']) + " updated."
-    attachment = MessageAttachmentsClass()
-    attachment.title = "Get all invoice details"
+            # Creating message object for webhook message
+            webhook_message = MessageClass()
+            id = str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id'])
+            webhook_message.message_text = "Invoice " + str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id']) + " updated"
+            attachment = MessageAttachmentsClass()
+            attachment.title = "Invoice operations"
 
-    button_get_incidents = MessageButtonsClass()
-    button_get_incidents.name = "1"
-    button_get_incidents.value = "1"
-    button_get_incidents.text = "Get all invoice details"
-    button_get_incidents.command = {
-        "service_application": service_application,
-        "function_name": 'list_all_invoice_ids',
-        "data": {}
-    }
+            button_get_incidents = MessageButtonsClass()
+            button_get_incidents.name = "1"
+            button_get_incidents.value = "1"
+            button_get_incidents.text = "Get invoice details"
+            button_get_incidents.command = {
+                "service_application": service_application,
+                "function_name": 'read_invoice',
+                "data": {"invoice_id":id}
+            }
 
-    attachment.attach_button(button_get_incidents)
-    webhook_message.attach(attachment)
-    #print(integration_id)
+            attachment.attach_button(button_get_incidents)
+            webhook_message.attach(attachment)
+            #print(integration_id)
 
-    # Creating yellowant object
-    yellowant_user_integration_object = YellowAnt(access_token=access_token)
+            webhook_message.data = {"invoice_id":id}
+            # Creating yellowant object
+            yellowant_user_integration_object = YellowAnt(access_token=access_token)
 
-    # Sending webhook message to user
-    send_message = yellowant_user_integration_object.create_webhook_message(
-        requester_application=integration_id,
-        webhook_name="invoice_update", **webhook_message.get_dict())
+            # Sending webhook message to user
+            send_message = yellowant_user_integration_object.create_webhook_message(
+                requester_application=integration_id,
+                webhook_name="invoice_update", **webhook_message.get_dict())
 
-    return HttpResponse("OK", status=200)
+            return HttpResponse("OK", status=200)
+
+        except YellowUserToken.DoesNotExist:
+            return HttpResponse("Not Authorized", status=403)
+    else:
+        return HttpResponse(status=400)
 
 
 def add_new_invoice(request,webhook_id):
@@ -293,46 +307,58 @@ def add_new_invoice(request,webhook_id):
 
 
     # Extracting necessary data
-    data = (request.body.decode('utf-8'))
-    response_json = json.loads(data)
+    code = request.GET.get("code", False)
 
-    yellow_obj = YellowUserToken.objects.get(webhook_id=webhook_id)
-    print(yellow_obj)
-    access_token = yellow_obj.yellowant_token
-    print(access_token)
-    integration_id = yellow_obj.yellowant_integration_id
-    service_application = str(integration_id)
-    print(service_application)
+    if code == request.codes.ok:
+        data = (request.body.decode('utf-8'))
+        response_json = json.loads(data)
 
-    # Creating message object for webhook message
-    webhook_message = MessageClass()
-    webhook_message.message_text = "New invoice added with id: " + str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id'])
-    attachment = MessageAttachmentsClass()
-    attachment.title = "Get all invoice details"
+        try:
+            yellow_obj = YellowUserToken.objects.get(webhook_id=webhook_id)
+            print(yellow_obj)
+            access_token = yellow_obj.yellowant_token
+            print(access_token)
+            integration_id = yellow_obj.yellowant_integration_id
+            service_application = str(integration_id)
+            print(service_application)
 
-    button_get_incidents = MessageButtonsClass()
-    button_get_incidents.name = "1"
-    button_get_incidents.value = "1"
-    button_get_incidents.text = "Get all invoice details"
-    button_get_incidents.command = {
-        "service_application": service_application,
-        "function_name": 'list_all_invoice_ids',
-        "data": {}
-    }
+            # Creating message object for webhook message
+            webhook_message = MessageClass()
+            id = str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id'])
+            webhook_message.message_text = "New invoice added\n" + "ID :" + str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id'])
+            attachment = MessageAttachmentsClass()
+            attachment.title = "Invoice operations"
 
-    attachment.attach_button(button_get_incidents)
-    webhook_message.attach(attachment)
-    #print(integration_id)
+            button_get_incidents = MessageButtonsClass()
+            button_get_incidents.name = "1"
+            button_get_incidents.value = "1"
+            button_get_incidents.text = "Read invoice"
+            button_get_incidents.command = {
+                "service_application": service_application,
+                "function_name": 'read_invoice',
+                "data": {"invoice_id": id}
+            }
 
-    # Creating yellowant object
-    yellowant_user_integration_object = YellowAnt(access_token=access_token)
 
-    # Sending webhook message to user
-    send_message = yellowant_user_integration_object.create_webhook_message(
-        requester_application=integration_id,
-        webhook_name="new_invoice", **webhook_message.get_dict())
+            webhook_message.data = {"invoice_id":id}
+            attachment.attach_button(button_get_incidents)
+            webhook_message.attach(attachment)
+            #print(integration_id)
 
-    return HttpResponse("OK", status=200)
+            # Creating yellowant object
+            yellowant_user_integration_object = YellowAnt(access_token=access_token)
+
+            # Sending webhook message to user
+            send_message = yellowant_user_integration_object.create_webhook_message(
+                requester_application=integration_id,
+                webhook_name="new_invoice", **webhook_message.get_dict())
+
+            return HttpResponse("OK", status=200)
+
+        except YellowUserToken.DoesNotExist:
+            return HttpResponse("Not Authorized", status=403)
+    else:
+        return HttpResponse(status=400)
 
 def add_new_customer(request,webhook_id):
 
@@ -342,48 +368,60 @@ def add_new_customer(request,webhook_id):
     print("In add_new_customer")
     print(webhook_id)
     # Extracting necessary data
-    data = (request.body.decode('utf-8'))
-    response_json = json.loads(data)
-    print(response_json)
 
-    yellow_obj = YellowUserToken.objects.get(webhook_id=webhook_id)
-    print(yellow_obj)
-    access_token = yellow_obj.yellowant_token
-    print(access_token)
-    integration_id = yellow_obj.yellowant_integration_id
-    #QuickbookUserToken.objects.get(realmId=response_json['eventNotifications'][0]['realmId']).user_integration_id
-    service_application = str(integration_id)
-    print(service_application)
+    code = request.GET.get("code", False)
 
-    # Creating message object for webhook message
-    webhook_message = MessageClass()
-    webhook_message.message_text = "New customer added with id :" + str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id'])
-    attachment = MessageAttachmentsClass()
-    attachment.title = "Get all customer details"
+    if code == request.codes.ok:
+        data = (request.body.decode('utf-8'))
+        response_json = json.loads(data)
+        print(response_json)
 
-    button_get_incidents = MessageButtonsClass()
-    button_get_incidents.name = "1"
-    button_get_incidents.value = "1"
-    button_get_incidents.text = "Get all customer details"
-    button_get_incidents.command = {
-        "service_application": service_application,
-        "function_name": 'get_all_customers',
-        "data": {}
-    }
+        try:
+            yellow_obj = YellowUserToken.objects.get(webhook_id=webhook_id)
+            print(yellow_obj)
+            access_token = yellow_obj.yellowant_token
+            print(access_token)
+            integration_id = yellow_obj.yellowant_integration_id
+            #QuickbookUserToken.objects.get(realmId=response_json['eventNotifications'][0]['realmId']).user_integration_id
+            service_application = str(integration_id)
+            print(service_application)
 
-    attachment.attach_button(button_get_incidents)
-    webhook_message.attach(attachment)
-    #print(integration_id)
+            # Creating message object for webhook message
+            webhook_message = MessageClass()
+            id = str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id'])
+            webhook_message.message_text = "New customer added\n" + "ID :" + str(response_json['eventNotifications'][0]['dataChangeEvent']['entities'][0]['id'])
+            attachment = MessageAttachmentsClass()
+            attachment.title = "Get all customer details"
 
-    # Creating yellowant object
-    yellowant_user_integration_object = YellowAnt(access_token=access_token)
+            button_get_incidents = MessageButtonsClass()
+            button_get_incidents.name = "1"
+            button_get_incidents.value = "1"
+            button_get_incidents.text = "Get customer details"
+            button_get_incidents.command = {
+                "service_application": service_application,
+                "function_name": 'get_customer_details',
+                "data": {"customer_id": id}
+            }
 
-    # Sending webhook message to user
-    send_message = yellowant_user_integration_object.create_webhook_message(
-        requester_application=integration_id,
-        webhook_name="new_customer", **webhook_message.get_dict())
+            attachment.attach_button(button_get_incidents)
 
-    return HttpResponse("OK", status=200)
+            webhook_message.data = {"customer_id":id}
+            webhook_message.attach(attachment)
+            #print(integration_id)
+
+            # Creating yellowant object
+            yellowant_user_integration_object = YellowAnt(access_token=access_token)
+
+            # Sending webhook message to user
+            send_message = yellowant_user_integration_object.create_webhook_message(
+                requester_application=integration_id,
+                webhook_name="new_customer", **webhook_message.get_dict())
+            return HttpResponse("OK", status=200)
+
+        except YellowUserToken.DoesNotExist:
+            return HttpResponse("Not Authorized", status=403)
+    else:
+        return HttpResponse(status=400)
 
 
 @csrf_exempt

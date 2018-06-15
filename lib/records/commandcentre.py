@@ -510,8 +510,8 @@ class CommandCentre(object):
             return message.to_json()
         else:
             m = MessageClass()
-            d = json.loads(r.text)
-            m.message_text = d["Fault"]["Error"][0]["Detail"]
+            #d = json.loads(r.text)
+            m.message_text = "You entered an invalid customer id.\nPlease try again with valid arguments."  #d["Fault"]["Error"][0]["Detail"]
             return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
 
     def create_customer(self,args):
@@ -597,6 +597,7 @@ class CommandCentre(object):
             return message.to_json()
         else:
             m = MessageClass()
+            print(r.text)
             d = json.loads(r.text)
             m.message_text = d["Fault"]["Error"][0]["Detail"]
             return m.to_json() #"{0}: {1}".format(r.status_code, r.text)
@@ -752,6 +753,6 @@ class CommandCentre(object):
             return m.to_json()
         else:
             m = MessageClass()
-            d = json.loads(r.text)
+            d = json.loads(r.text.decode("utf-8"))
             m.message_text = d["Fault"]["Error"][0]["Detail"]
             return m.to_json() #"{0}: {1}".format(r.status_code, r.text)

@@ -95,17 +95,21 @@ def user_detail_update_delete_view(request, id=None):
     if request.method == "DELETE":
         print("Deleting integration")
         access_token_dict = YellowUserToken.objects.get(id=id)
-        access_token = access_token_dict.yellowant_token
-        print(access_token)
-        user_integration_id = access_token_dict.yellowant_integration_id
-        print(user_integration_id)
-        url = "https://api.yellowant.com/api/user/integration/%s"%(user_integration_id)
-        yellowant_user = YellowAnt(access_token=access_token)
-        print(yellowant_user)
-        yellowant_user.delete_user_integration(id=user_integration_id)
-        response = YellowUserToken.objects.get(yellowant_token=access_token).delete()
-        print(response)
-        return HttpResponse("successResponse", status=200)
+        user_id = access_token_dict.user
+        if user_id == request.user.id:
+            access_token = access_token_dict.yellowant_token
+            print(access_token)
+            user_integration_id = access_token_dict.yellowant_integration_id
+            print(user_integration_id)
+            url = "https://api.yellowant.com/api/user/integration/%s"%(user_integration_id)
+            yellowant_user = YellowAnt(access_token=access_token)
+            print(yellowant_user)
+            yellowant_user.delete_user_integration(id=user_integration_id)
+            response = YellowUserToken.objects.get(yellowant_token=access_token).delete()
+            print(response)
+            return HttpResponse("successResponse", status=200)
+        else:
+            return HttpResponse("Not Authenticated", status=403)
 
     elif request.method == "POST":
         print("In submitting data")
