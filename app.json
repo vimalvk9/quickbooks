@@ -12,12 +12,12 @@
       "required": true
     },
 
-    "CLIENT_SECRET":
+    "QUICKBOOKS_CLIENT_SECRET":
     {
       "description": "CLIENT SECRET",
       "required": true
     },
-    "CLIENT_ID":
+    "QUICKBOOKS_CLIENT_ID":
     {
       "description": "CLIENT ID",
       "required": true

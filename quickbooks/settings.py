@@ -52,8 +52,8 @@ YELLOWANT_REDIRECT_URL = BASE_URL + "yellowantredirecturl/"
 ### Quickbooks OAuth specific settings ###
 
 DISCOVERY_DOCUMENT = "https://appcenter.intuit.com/connect/oauth2" #'https://developer.api.intuit.com/.well-known/openid_sandbox_configuration/'
-QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
-QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
+# QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
+# QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
 QUICKBOOKS_REDIRECT_URL  = BASE_URL + "/quickbookauthurl/"
 
 #"https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl"
