@@ -1,0 +1,34 @@
+{
+  "name": "Quickbooks",
+  "description": "Enjoy Quickbooks Integration on YellowAnt",
+  "keywords": ["python3", "django2","yellowant"],
+  "env": {
+    "YELLOWANT_DEVELOPER_TOKEN": {
+      "description": "YellowAnt Developer Token",
+      "required": true
+    },
+    "HEROKU_APP_NAME": {
+      "description": "Heroku App name",
+      "required": true
+    },
+
+    "CLIENT_SECRET":
+    {
+      "description": "CLIENT SECRET",
+      "required": true
+    },
+    "CLIENT_ID":
+    {
+      "description": "CLIENT ID",
+      "required": true
+    },
+    "DISABLE_COLLECTSTATIC": {
+      "required": true,
+      "value" : "1"
+    },
+    "ENV": {
+      "required": false,
+      "value": "HEROKU"
+    }
+  }
+}

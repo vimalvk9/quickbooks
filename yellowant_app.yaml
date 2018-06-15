@@ -1,0 +1,266 @@
+api_url: https://82c2eb63.ngrok.io/yellowant-api/
+creator_email: admin@yellowant.com
+documentation_url: https://www.yellowant.com
+functions:
+  create_customer:
+    function_type: 1
+    input_args:
+      display_name:
+        arg_type: 14
+        description: Name of the customer
+        example: Advaith K
+        name: display_name
+        required: 1
+      e-mail:
+        arg_type: 14
+        description: E-mail of the customer
+        example: sample@gmail.com
+        name: e-mail
+        required: 1
+      notes:
+        arg_type: 14
+        description: Notes for the customer
+        example: Hey this is the sample notes
+        name: notes
+        required: 1
+    invoke_name: create_customer
+    is_active: 1
+    max_retries: 0
+    name: Create a customer
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Create a customer
+    user_rate_limit: 0.0
+  create_invoice:
+    function_type: 1
+    input_args:
+      amount:
+        arg_type: 6
+        description: Amount for the invoice
+        example: '100.0'
+        name: amount
+        required: 1
+      description:
+        arg_type: 14
+        description: Description for the invoice
+        example: sample description
+        name: description
+        required: 1
+      quantity:
+        arg_type: 1
+        description: Quantity for the invoice item
+        example: '23'
+        name: quantity
+        required: 1
+      sales_item_value:
+        arg_type: 1
+        description: Sales Item value for the particular customer
+        example: '23'
+        name: sales_item_value
+        required: 1
+      unit_price:
+        arg_type: 5
+        description: unit price of the invoice
+        example: '123'
+        name: unit_price
+        required: 1
+    invoke_name: create_invoice
+    is_active: 1
+    max_retries: 0
+    name: Create a single line invoice
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Create an invoice
+    user_rate_limit: 0.0
+  get_all_customers:
+    function_type: 1
+    input_args: {}
+    invoke_name: get_all_customers
+    is_active: 1
+    max_retries: 0
+    name: Get all customers
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Get the info of all customers
+    user_rate_limit: 0.0
+  get_company_info:
+    function_type: 1
+    input_args: {}
+    invoke_name: get_company_info
+    is_active: 1
+    max_retries: 0
+    name: Get company info
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Get company information
+    user_rate_limit: 0.0
+  get_customer_details:
+    function_type: 1
+    input_args:
+      customer_id:
+        arg_type: 1
+        description: Id of the customer
+        example: '1'
+        name: customer_id
+        required: 1
+    invoke_name: get_customer_details
+    is_active: 1
+    max_retries: 0
+    name: Get customer details
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Get customer details
+    user_rate_limit: 0.0
+  invoice_update:
+    function_type: 2
+    input_args: {}
+    invoke_name: invoice_update
+    is_active: 1
+    max_retries: 0
+    name: Get notification for an update in invoice
+    output_keys:
+      _keys:
+        invoice_id: '__unicode:  Invoice id'
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Webhook message for update in invoice
+    user_rate_limit: 0.0
+  list_all_customer_ids:
+    function_type: 1
+    input_args: {}
+    invoke_name: list_all_customer_ids
+    is_active: 1
+    max_retries: 0
+    name: List all customers id
+    output_keys:
+      _keys: '[keys_1]:  desc'
+      keys_1:
+        id: '__unicode:  Keys 1 id'
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: List all customer ids
+    user_rate_limit: 0.0
+  list_all_invoice_ids:
+    function_type: 1
+    input_args: {}
+    invoke_name: list_all_invoice_ids
+    is_active: 1
+    max_retries: 0
+    name: List all invoices id
+    output_keys:
+      _keys: '[keys_1]:  desc'
+      keys_1:
+        id: '__unicode:  Keys 1 id'
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Listing all invoice ids
+    user_rate_limit: 0.0
+  list_all_invoices:
+    function_type: 1
+    input_args: {}
+    invoke_name: list_all_invoices
+    is_active: 1
+    max_retries: 0
+    name: List all invoices
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: List all the invoices for the user
+    user_rate_limit: 0.0
+  new_customer:
+    function_type: 2
+    input_args: {}
+    invoke_name: new_customer
+    is_active: 1
+    max_retries: 0
+    name: Get notification for newly created customer
+    output_keys:
+      _keys:
+        customer_id: '__unicode:  Customer id'
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Webhook for newly created customer
+    user_rate_limit: 0.0
+  new_invoice:
+    function_type: 2
+    input_args: {}
+    invoke_name: new_invoice
+    is_active: 1
+    max_retries: 0
+    name: Get notification for newly created invoice
+    output_keys:
+      _keys:
+        invoice_id: '__unicode:  Invoice id'
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Webhook for newly created invoice
+    user_rate_limit: 0.0
+  read_invoice:
+    function_type: 1
+    input_args:
+      invoice_id:
+        arg_type: 1
+        description: Invoice id
+        example: '23456765432'
+        name: invoice_id
+        required: 1
+    invoke_name: read_invoice
+    is_active: 1
+    max_retries: 0
+    name: Read an invoice
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Reading an invoice
+    user_rate_limit: 0.0
+  update_invoice:
+    function_type: 1
+    input_args:
+      due_date:
+        arg_type: 14
+        description: Due date for the invoice
+        example: '2018-04-06'
+        name: due_date
+        required: 1
+      invoice_id:
+        arg_type: 1
+        description: Invoice id
+        example: '3'
+        name: invoice_id
+        required: 1
+      syn_token:
+        arg_type: 1
+        description: Syn_Token for the particular invoice
+        example: '1'
+        name: syn_token
+        required: 1
+    invoke_name: update_invoice
+    is_active: 1
+    max_retries: 0
+    name: Update invoice
+    output_keys: {}
+    privacy_mode: 0
+    rate_limited: 0
+    short_description: Updating an invoice
+    user_rate_limit: 0.0
+icon_url: https://quickbooks.intuit.com/content/dam/intuit/quickbooks/common/qb_thumb.png
+install_page_url: https://www.yellowant.com
+invoke_name: quickbooks
+is_active: 1
+is_production_or_sandbox: 1
+long_description: QuickBooks is an accounting software program used to manage sales
+  and expenses and keep track of daily business transactions.
+name: Quickbooks
+privacy_policy_url: https://www.yellowant.com
+rate_limit: 0.0
+rate_limited: 0
+redirect_uris: https://82c2eb63.ngrok.io/yellowantredirecturl/
+short_description: An accounting software program used to manage sales and expenses
+user_rate_limit: 0.0
+visibility_scope: 0
+website: https://www.yellowant.com
