@@ -51,6 +51,8 @@ YELLOWANT_REDIRECT_URL = BASE_URL + "yellowantredirecturl/"
 
 ### Quickbooks OAuth specific settings ###
 
+MS_CLIENT_SECRET = os.environ.get("QUICKBOOKS_CLIENT_SECRET", "")
+MS_CLIENT_ID = os.environ.get("QUICKBOOKS_CLIENT_ID", "")
 DISCOVERY_DOCUMENT = "https://appcenter.intuit.com/connect/oauth2" #'https://developer.api.intuit.com/.well-known/openid_sandbox_configuration/'
 # QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
 # QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
