@@ -56,8 +56,8 @@ QUICKBOOKS_CLIENT_ID = os.environ.get("QUICKBOOKS_CLIENT_ID", "")
 DISCOVERY_DOCUMENT = "https://appcenter.intuit.com/connect/oauth2" #'https://developer.api.intuit.com/.well-known/openid_sandbox_configuration/'
 # QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
 # QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
-QUICKBOOKS_REDIRECT_URL  = BASE_URL + "/quickbookauthurl/"
-
+QUICKBOOKS_REDIRECT_URL  = BASE_URL + "quickbookauthurl/"
+print(QUICKBOOKS_CLIENT_ID,QUICKBOOKS_CLIENT_SECRET,YELLOWANT_REDIRECT_URL)
 #"https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl"
 
 PRODUCTION_BASE_URL = "https://quickbooks.api.intuit.com"
