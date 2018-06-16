@@ -14,10 +14,11 @@ import os
 import json
 
 
-data = open('yellowant_app_credentials.json').read()
-data_json = json.loads(data)
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+data = open('yellowant_app_credentials.json').read()
+data_json = json.loads(data)
 
 BASE_HREF = "/"
 
@@ -31,9 +32,13 @@ SITE_PROTOCOL = "https://"
 DEV_ENV = os.environ.get('ENV', 'DEV')
 print(DEV_ENV)
 if DEV_ENV=="DEV":
+    QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
+    QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
     BASE_URL = "http://82c2eb63.ngrok.io"
     SITE_DOMAIN_URL = "ngrok.io"
 elif DEV_ENV=="HEROKU":
+    QUICKBOOKS_CLIENT_SECRET = os.environ.get("QUICKBOOKS_CLIENT_SECRET", "")
+    QUICKBOOKS_CLIENT_ID = os.environ.get("QUICKBOOKS_CLIENT_ID", "")
     BASE_URL = "https://{}.herokuapp.com/".format(app_name)
     app_name = os.environ.get("HEROKU_APP_NAME")
     SITE_DOMAIN_URL = "herokuapp.com"
@@ -51,13 +56,11 @@ YELLOWANT_REDIRECT_URL = BASE_URL + "yellowantredirecturl/"
 
 ### Quickbooks OAuth specific settings ###
 
-QUICKBOOKS_CLIENT_SECRET = os.environ.get("QUICKBOOKS_CLIENT_SECRET", "")
-QUICKBOOKS_CLIENT_ID = os.environ.get("QUICKBOOKS_CLIENT_ID", "")
+
 DISCOVERY_DOCUMENT = "https://appcenter.intuit.com/connect/oauth2" #'https://developer.api.intuit.com/.well-known/openid_sandbox_configuration/'
 # QUICKBOOKS_CLIENT_ID = "Q0rulq5zAkeK7jAFgcsfB2rjsW83SJm01fnTnJNvwka4256bMP"
 # QUICKBOOKS_CLIENT_SECRET = "b6hE2bJNMomSMgmZoAaGFrtCYVY4rZM3VwPMoQtp"
 QUICKBOOKS_REDIRECT_URL  = BASE_URL + "quickbookauthurl/"
-print(QUICKBOOKS_CLIENT_ID,QUICKBOOKS_CLIENT_SECRET,YELLOWANT_REDIRECT_URL)
 #"https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl"
 
 PRODUCTION_BASE_URL = "https://quickbooks.api.intuit.com"
