@@ -1,4 +1,4 @@
-api_url: https://82c2eb63.ngrok.io/yellowant-api/
+api_url: https://quickbooks2.herokuapp.com/yellowant-api/
 creator_email: admin@yellowant.com
 documentation_url: https://www.yellowant.com
 functions:
@@ -125,7 +125,7 @@ functions:
     name: Get notification for an update in invoice
     output_keys:
       _keys:
-        invoice_id: '__unicode:  Invoice id'
+        invoice_id: '__unicode: Invoice id'
     privacy_mode: 0
     rate_limited: 0
     short_description: Webhook message for update in invoice
@@ -138,9 +138,9 @@ functions:
     max_retries: 0
     name: List all customers id
     output_keys:
-      _keys: '[keys_1]:  desc'
+      _keys: '[keys_1]: desc'
       keys_1:
-        id: '__unicode:  Keys 1 id'
+        id: '__unicode: Keys 1 id'
     privacy_mode: 0
     rate_limited: 0
     short_description: List all customer ids
@@ -153,9 +153,9 @@ functions:
     max_retries: 0
     name: List all invoices id
     output_keys:
-      _keys: '[keys_1]:  desc'
+      _keys: '[keys_1]: desc'
       keys_1:
-        id: '__unicode:  Keys 1 id'
+        id: '__unicode: Keys 1 id'
     privacy_mode: 0
     rate_limited: 0
     short_description: Listing all invoice ids
@@ -181,7 +181,7 @@ functions:
     name: Get notification for newly created customer
     output_keys:
       _keys:
-        customer_id: '__unicode:  Customer id'
+        customer_id: '__unicode: Customer id'
     privacy_mode: 0
     rate_limited: 0
     short_description: Webhook for newly created customer
@@ -195,7 +195,7 @@ functions:
     name: Get notification for newly created invoice
     output_keys:
       _keys:
-        invoice_id: '__unicode:  Invoice id'
+        invoice_id: '__unicode: Invoice id'
     privacy_mode: 0
     rate_limited: 0
     short_description: Webhook for newly created invoice
@@ -249,18 +249,18 @@ functions:
     short_description: Updating an invoice
     user_rate_limit: 0.0
 icon_url: https://quickbooks.intuit.com/content/dam/intuit/quickbooks/common/qb_thumb.png
-install_page_url: https://www.yellowant.com
+install_page_url: https://quickbooks2.herokuapp.com/
 invoke_name: quickbooks
 is_active: 1
 is_production_or_sandbox: 1
 long_description: QuickBooks is an accounting software program used to manage sales
   and expenses and keep track of daily business transactions.
 name: Quickbooks
-privacy_policy_url: https://www.yellowant.com
+privacy_policy_url: https://quickbooks2.herokuapp.com/privacy
 rate_limit: 0.0
 rate_limited: 0
-redirect_uris: https://82c2eb63.ngrok.io/yellowantredirecturl/
+redirect_uris: https://quickbooks2.herokuapp.com/yellowantredirecturl/
 short_description: An accounting software program used to manage sales and expenses
 user_rate_limit: 0.0
 visibility_scope: 0
-website: https://www.yellowant.com
+website: https://quickbooks2.herokuapp.com/
